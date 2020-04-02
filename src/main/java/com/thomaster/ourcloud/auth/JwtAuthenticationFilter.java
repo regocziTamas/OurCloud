@@ -1,6 +1,5 @@
 package com.thomaster.ourcloud.auth;
 
-import com.thomaster.ourcloud.model.OCUser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -14,10 +13,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.util.Collection;
 import java.util.Date;
-import java.util.stream.Collectors;
 
 public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
@@ -58,9 +55,13 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                 .setAudience(SecurityConstants.TOKEN_AUDIENCE)
                 .setSubject(user.getUsername())
                 .setExpiration(new Date(System.currentTimeMillis() + 864000000))
-                .claim("rol", user.getAuthorities())
+                .claim("rol", formatAndGetOnlyAuthority(user.getAuthorities()))
                 .compact();
 
         response.addHeader(SecurityConstants.TOKEN_HEADER, SecurityConstants.TOKEN_PREFIX + token);
+    }
+
+    private String formatAndGetOnlyAuthority(Collection<GrantedAuthority> authorityCollection) {
+        return authorityCollection.iterator().next().toString().replace("ROLE_", "");
     }
 }

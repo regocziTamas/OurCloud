@@ -1,6 +1,6 @@
 package com.thomaster.ourcloud.repositories;
 
-import com.thomaster.ourcloud.model.OCUser;
+import com.thomaster.ourcloud.model.user.OCUser;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

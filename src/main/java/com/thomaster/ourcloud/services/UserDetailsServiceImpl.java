@@ -1,6 +1,6 @@
 package com.thomaster.ourcloud.services;
 
-import com.thomaster.ourcloud.model.OCUser;
+import com.thomaster.ourcloud.model.user.OCUser;
 import com.thomaster.ourcloud.repositories.UserRepository;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;

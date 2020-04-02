@@ -1,0 +1,1 @@
+CREATE INDEX file_path_idx on public.persistent_file_system_element using gist (relative_path);

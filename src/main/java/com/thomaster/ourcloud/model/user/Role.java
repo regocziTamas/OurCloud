@@ -1,4 +1,4 @@
-package com.thomaster.ourcloud.model;
+package com.thomaster.ourcloud.model.user;
 
 public enum Role {
 
