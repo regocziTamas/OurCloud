@@ -28,7 +28,7 @@ class DeleteRequestValidatorTest {
         uploadedFile.setParentFolderPath("Thomaster");
         uploadedFile.setFileSize(100L);
         uploadedFile.setOriginalName("file_to_delete.txt");
-        uploadedFile.setRelativePath("Thomaster/file_to_delete_txt");
+        uploadedFile.setRelativePath("Thomaster.file_to_delete_txt");
         uploadedFile.setOwner(ocUser);
 
         DeleteRequest request = new DeleteRequest.DeleteRequestBuilder()
@@ -68,7 +68,7 @@ class DeleteRequestValidatorTest {
         uploadedFile.setParentFolderPath("Thomaster");
         uploadedFile.setFileSize(100L);
         uploadedFile.setOriginalName("file_to_delete.txt");
-        uploadedFile.setRelativePath("Thomaster/file_to_delete_txt");
+        uploadedFile.setRelativePath("Thomaster.file_to_delete_txt");
         uploadedFile.setOwner(ocUser);
 
         DeleteRequest request = new DeleteRequest.DeleteRequestBuilder()

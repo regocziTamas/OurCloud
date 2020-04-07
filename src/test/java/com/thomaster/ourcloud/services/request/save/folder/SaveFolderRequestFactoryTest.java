@@ -1,5 +1,6 @@
 package com.thomaster.ourcloud.services.request.save.folder;
 
+import com.thomaster.ourcloud.model.filesystem.UploadedFile;
 import com.thomaster.ourcloud.model.filesystem.UploadedFolder;
 import com.thomaster.ourcloud.model.user.OCUser;
 import com.thomaster.ourcloud.services.FileService;
@@ -66,5 +67,81 @@ class SaveFolderRequestFactoryTest {
         assertThat(saveFolderRequest.getParentFolder()).isEqualTo(folder);
         assertThat(saveFolderRequest.getParentFolderOwner()).isEqualTo(ocUser);
         assertThat(saveFolderRequest.getInitiatingUser().get()).isEqualTo(ocUser);
+    }
+
+    @Test
+    void test_createSaveFolderRequest_userNotLoggedIn() {
+        OCUser ocUser = new OCUser();
+        ocUser.setId(1L);
+        ocUser.setUsername("Thomaster");
+        ocUser.setUsedBytes(100L);
+
+        UploadedFolder folder = new UploadedFolder();
+        folder.setParentFolderPath("");
+        folder.setFileSize(100L);
+        folder.setOriginalName("Thomaster");
+        folder.setRelativePath("Thomaster");
+        folder.setOwner(ocUser);
+
+        when(userService.getCurrentlyLoggedInUser()).thenReturn(Optional.empty());
+        when(fileService.findFSElementWithContainedFilesByPath_noChecks(any())).thenReturn(folder);
+
+        SaveFolderRequest saveFolderRequest = requestFactory.createSaveFolderRequest("Thomaster", "New Folder", true);
+
+        ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
+
+        verify(fileService, times(1)).findFSElementWithContainedFilesByPath_noChecks(argumentCaptor.capture());
+        verify(userService, times(1)).getCurrentlyLoggedInUser();
+
+        assertThat(argumentCaptor.getValue()).isEqualTo("Thomaster");
+        assertThat(saveFolderRequest.getOriginalName()).isEqualTo("New Folder");
+        assertThat(saveFolderRequest.isShouldOverrideExistingFile()).isEqualTo(true);
+        assertThat(saveFolderRequest.getParentFolder()).isEqualTo(folder);
+        assertThat(saveFolderRequest.getParentFolderOwner()).isEqualTo(ocUser);
+        assertThat(saveFolderRequest.getInitiatingUser()).isEmpty();
+    }
+
+    @Test
+    void test_createSaveFolderRequest_parentFolderNotExists() {
+        OCUser ocUser = new OCUser();
+        ocUser.setId(1L);
+        ocUser.setUsername("Thomaster");
+        ocUser.setUsedBytes(100L);
+
+        when(userService.getCurrentlyLoggedInUser()).thenReturn(Optional.of(ocUser));
+        when(fileService.findFSElementWithContainedFilesByPath_noChecks(any())).thenReturn(null);
+
+        assertThatThrownBy(() -> requestFactory.createSaveFolderRequest("Thomaster", "New Folder", true)).isInstanceOf(IllegalArgumentException.class);
+
+        ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
+
+        verify(fileService, times(1)).findFSElementWithContainedFilesByPath_noChecks(argumentCaptor.capture());
+        verify(userService, times(1)).getCurrentlyLoggedInUser();
+    }
+
+    @Test
+    void test_createSaveFolderRequest_parentFolderNotFolder() {
+        OCUser ocUser = new OCUser();
+        ocUser.setId(1L);
+        ocUser.setUsername("Thomaster");
+        ocUser.setUsedBytes(100L);
+
+        UploadedFile uploadedFile = new UploadedFile();
+        uploadedFile.setParentFolderPath("Thomaster");
+        uploadedFile.setFileSize(100L);
+        uploadedFile.setOriginalName("file_that_is_not_folder.txt");
+        uploadedFile.setRelativePath("Thomaster.file_that_is_not_folder_txt");
+        uploadedFile.setOwner(ocUser);
+
+        when(userService.getCurrentlyLoggedInUser()).thenReturn(Optional.of(ocUser));
+        when(fileService.findFSElementWithContainedFilesByPath_noChecks(any())).thenReturn(uploadedFile);
+
+        assertThatThrownBy(() -> requestFactory.createSaveFolderRequest("Thomaster.file_that_is_not_folder_txt", "New Folder", true))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
+
+        verify(fileService, times(1)).findFSElementWithContainedFilesByPath_noChecks(argumentCaptor.capture());
+        verify(userService, times(1)).getCurrentlyLoggedInUser();
     }
 }

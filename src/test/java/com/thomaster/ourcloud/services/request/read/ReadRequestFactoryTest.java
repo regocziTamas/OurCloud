@@ -62,4 +62,29 @@ class ReadRequestFactoryTest {
         assertThat(readRequest.getFileToReadOwner()).isEqualTo(ocUser);
         assertThat(readRequest.getInitiatingUser().get()).isEqualTo(ocUser);
     }
+
+    @Test
+    void test_createReadRequest_userNotLoggedIn() {
+        OCUser ocUser = new OCUser();
+        ocUser.setId(1L);
+        ocUser.setUsername("Thomaster");
+        ocUser.setUsedBytes(100L);
+
+        UploadedFolder folder = new UploadedFolder();
+        folder.setParentFolderPath("");
+        folder.setFileSize(100L);
+        folder.setOriginalName("Thomaster");
+        folder.setRelativePath("Thomaster");
+        folder.setOwner(ocUser);
+
+        when(userService.getCurrentlyLoggedInUser()).thenReturn(Optional.empty());
+
+        ReadRequest readRequest = requestFactory.createReadRequest(folder);
+
+        verify(userService, times(1)).getCurrentlyLoggedInUser();
+
+        assertThat(readRequest.getFileToRead()).isEqualTo(folder);
+        assertThat(readRequest.getFileToReadOwner()).isEqualTo(ocUser);
+        assertThat(readRequest.getInitiatingUser()).isEmpty();
+    }
 }

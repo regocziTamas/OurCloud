@@ -21,7 +21,7 @@ class ReadRequestValidatorTest {
         uploadedFile.setParentFolderPath("Thomaster");
         uploadedFile.setFileSize(100L);
         uploadedFile.setOriginalName("file_to_read.txt");
-        uploadedFile.setRelativePath("Thomaster/file_to_read_txt");
+        uploadedFile.setRelativePath("Thomaster.file_to_read_txt");
         uploadedFile.setOwner(ocUser);
 
         ReadRequest readRequest = new ReadRequest.ReadRequestBuilder()
@@ -52,7 +52,7 @@ class ReadRequestValidatorTest {
         uploadedFile.setParentFolderPath("Thomaster");
         uploadedFile.setFileSize(100L);
         uploadedFile.setOriginalName("file_to_read.txt");
-        uploadedFile.setRelativePath("Thomaster/file_to_read_txt");
+        uploadedFile.setRelativePath("Thomaster.file_to_read_txt");
         uploadedFile.setOwner(ocUser);
 
         ReadRequest readRequest = new ReadRequest.ReadRequestBuilder()

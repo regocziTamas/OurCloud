@@ -38,6 +38,38 @@ class SaveFolderRequestValidatorTest {
     }
 
     @Test
+    public void test_happyPath() {
+
+        SaveFolderRequest request = new SaveFolderRequest.SaveFolderRequestBuilder()
+                .originalName("Folder_02")
+                .shouldOverrideExistingFile(false)
+                .parentFolder(folder)
+                .parentFolderOwner(ocUser)
+                .initiatingUser(ocUser)
+                .build();
+
+        SaveFolderRequestValidator validator = new SaveFolderRequestValidator();
+
+        assertThatCode(() -> validator.validateRequest(request)).doesNotThrowAnyException();
+    }
+
+    @Test
+    public void test_userHasNoWriteAccess() {
+
+        SaveFolderRequest request = new SaveFolderRequest.SaveFolderRequestBuilder()
+                .originalName("Folder_02")
+                .shouldOverrideExistingFile(false)
+                .parentFolder(folder)
+                .parentFolderOwner(ocUser)
+                .initiatingUser(ocUserTwo)
+                .build();
+
+        SaveFolderRequestValidator validator = new SaveFolderRequestValidator();
+
+        assertThatThrownBy(() -> validator.validateRequest(request)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     public void test_fileNameIsNotUniqueInFolder() {
 
         UploadedFolder folder = new UploadedFolder();

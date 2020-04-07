@@ -57,7 +57,7 @@ class DeleteRequestFactoryTest {
         uploadedFile.setParentFolderPath("Thomaster");
         uploadedFile.setFileSize(100L);
         uploadedFile.setOriginalName("file_to_delete.txt");
-        uploadedFile.setRelativePath("Thomaster/file_to_delete_txt");
+        uploadedFile.setRelativePath("Thomaster.file_to_delete_txt");
         uploadedFile.setOwner(ocUser);
 
         when(userService.getCurrentlyLoggedInUser()).thenReturn(Optional.of(ocUser));
@@ -77,6 +77,46 @@ class DeleteRequestFactoryTest {
         assertThat(deleteRequest.getParentFolder()).isEqualTo(folder);
         assertThat(deleteRequest.getParentFolderOwner()).isEqualTo(ocUser);
         assertThat(deleteRequest.getInitiatingUser().get()).isEqualTo(ocUser);
+    }
+
+    @Test
+    void test_createDeleteRequest_userNotLoggedIn() {
+        OCUser ocUser = new OCUser();
+        ocUser.setId(1L);
+        ocUser.setUsername("Thomaster");
+        ocUser.setUsedBytes(100L);
+
+        UploadedFolder folder = new UploadedFolder();
+        folder.setParentFolderPath("");
+        folder.setFileSize(100L);
+        folder.setOriginalName("Thomaster");
+        folder.setRelativePath("Thomaster");
+        folder.setOwner(ocUser);
+
+        UploadedFile uploadedFile = new UploadedFile();
+        uploadedFile.setParentFolderPath("Thomaster");
+        uploadedFile.setFileSize(100L);
+        uploadedFile.setOriginalName("file_to_delete.txt");
+        uploadedFile.setRelativePath("Thomaster.file_to_delete_txt");
+        uploadedFile.setOwner(ocUser);
+
+        when(userService.getCurrentlyLoggedInUser()).thenReturn(Optional.empty());
+        when(fileService.findFSElementWithContainedFilesByPath_noChecks("Thomaster")).thenReturn(folder);
+        when(fileService.findFSElementWithContainedFilesByPath_noChecks("Thomaster.file_to_delete_txt")).thenReturn(uploadedFile);
+
+        DeleteRequest deleteRequest = requestFactory.createDeleteRequest("Thomaster.file_to_delete_txt");
+
+        ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
+
+        verify(fileService, times(2)).findFSElementWithContainedFilesByPath_noChecks(argumentCaptor.capture());
+        verify(userService, times(1)).getCurrentlyLoggedInUser();
+
+        assertThat(argumentCaptor.getAllValues()).containsExactlyInAnyOrder("Thomaster", "Thomaster.file_to_delete_txt");
+        assertThat(deleteRequest.getFileToDelete()).isEqualTo(uploadedFile);
+        assertThat(deleteRequest.getFileToDeleteOwner()).isEqualTo(ocUser);
+        assertThat(deleteRequest.getParentFolder()).isEqualTo(folder);
+        assertThat(deleteRequest.getParentFolderOwner()).isEqualTo(ocUser);
+        assertThat(deleteRequest.getInitiatingUser()).isEmpty();
     }
 
     @Test
