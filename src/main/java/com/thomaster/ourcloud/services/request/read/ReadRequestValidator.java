@@ -1,6 +1,7 @@
 package com.thomaster.ourcloud.services.request.read;
 
 import com.thomaster.ourcloud.model.user.OCUser;
+import com.thomaster.ourcloud.services.request.RequestValidationException;
 import com.thomaster.ourcloud.services.request.RequestValidator;
 import org.springframework.stereotype.Component;
 
@@ -13,9 +14,9 @@ public class ReadRequestValidator extends RequestValidator<ReadRequest> {
 
     private void callerHasReadAccessToFolder(ReadRequest readRequest) {
         OCUser initiatingUser = readRequest.getInitiatingUser()
-                .orElseThrow(() -> new IllegalArgumentException("You must be logged in to perform this operation!"));
+                .orElseThrow(RequestValidationException::notLoggedIn);
 
         if (!readRequest.getFileToReadOwner().equals(initiatingUser))
-            throw new IllegalArgumentException("You have no access to this file!");
+            throw RequestValidationException.noReadPermission();
     }
 }

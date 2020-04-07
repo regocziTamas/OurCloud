@@ -8,7 +8,6 @@ public class ReadRequest extends BaseRequest {
 
     private OCUser fileToReadOwner;
     private FileSystemElement fileToRead;
-    private OCUser initiatingUser;
 
     private ReadRequest(OCUser initiatingUser,
                         FileSystemElement fileToRead,

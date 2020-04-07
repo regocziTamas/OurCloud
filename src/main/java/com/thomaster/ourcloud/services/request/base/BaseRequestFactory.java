@@ -7,6 +7,7 @@ import com.thomaster.ourcloud.model.filesystem.UploadedFile;
 import com.thomaster.ourcloud.model.filesystem.UploadedFolder;
 import com.thomaster.ourcloud.services.FileService;
 import com.thomaster.ourcloud.services.OCUserService;
+import com.thomaster.ourcloud.services.request.RequestValidationException;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -22,28 +23,22 @@ public class BaseRequestFactory<T extends BaseRequest> {
 
     public UploadedFolder validatePathThenQueryAndCastToFolder(String path) {
 
-        FileSystemElement folder = fileService.findFSElementWithContainedFilesByPath_noChecks(path);
-
-        if(folder == null)
-            throw new IllegalArgumentException("No Folder exists with the following path: " + path);
+        FileSystemElement folder = validatePathAndQueryFSE(path);
 
         if (folder instanceof UploadedFolder)
             return (UploadedFolder) folder;
         else
-            throw new IllegalArgumentException("Path: \""+ path + "\" is not a Folder!");
+            throw RequestValidationException.noFileSystemElementFound(path, "Folder");
     }
 
     public UploadedFile validatePathThenQueryAndCastToFile(String path) {
 
-        FileSystemElement uploadedFile = fileService.findFSElementWithContainedFilesByPath_noChecks(path);
-
-        if(uploadedFile == null)
-            throw new IllegalArgumentException("No File exists with the following path: " + path);
+        FileSystemElement uploadedFile = validatePathAndQueryFSE(path);
 
         if (uploadedFile instanceof UploadedFile)
             return (UploadedFile) uploadedFile;
         else
-            throw new IllegalArgumentException("Path: \""+ path + "\" is not a File!");
+            throw RequestValidationException.noFileSystemElementFound(path, "File");
     }
 
     public FileSystemElement validatePathAndQueryFSE(String path) {
@@ -51,16 +46,8 @@ public class BaseRequestFactory<T extends BaseRequest> {
         FileSystemElement fse = fileService.findFSElementWithContainedFilesByPath_noChecks(path);
 
         if(fse == null)
-            throw new IllegalArgumentException("No File exists with the following path: " + path);
+            throw RequestValidationException.noFileSystemElementFound(path, "FileSystemElement (Folder or File)");
 
         return fse;
     }
-
-    public String verifyPathNotEmpty(String path) {
-        if (Strings.isNullOrEmpty(path))
-            throw new IllegalArgumentException("The following ath is invalid: " + path);
-
-        return path;
-    }
-
 }
