@@ -45,7 +45,7 @@ class SaveFileRequestValidatorTest {
                 .fileExtension(Files.getFileExtension(file.getOriginalFilename()))
                 .originalName(file.getOriginalFilename())
                 .shouldOverrideExistingFile(true)
-                .parentFolder(folder)
+                .parentFolder(this.folder)
                 .parentFolderOwner(ocUser)
                 .initiatingUser(ocUser)
                 .build();
@@ -77,6 +77,27 @@ class SaveFileRequestValidatorTest {
     }
 
     @Test
+    public void test_userIsNotLoggedIn() {
+
+        MockMultipartFile file = new MockMultipartFile("TESTFILE", "file.txt","txt", new byte[10]);
+
+        SaveFileRequest request = new SaveFileRequest.SaveFileRequestBuilder()
+                .file(file)
+                .size(file.getSize())
+                .fileExtension(Files.getFileExtension(file.getOriginalFilename()))
+                .originalName(file.getOriginalFilename())
+                .shouldOverrideExistingFile(true)
+                .parentFolder(this.folder)
+                .parentFolderOwner(ocUser)
+                .initiatingUser(null)
+                .build();
+
+        SaveFileRequestValidator validator = new SaveFileRequestValidator();
+
+        assertThatThrownBy(() -> validator.validateRequest(request)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     public void test_userHasNotEnoughStorageLeft() {
 
         MockMultipartFile file = new MockMultipartFile("TESTFILE", "file.txt","txt", new byte[10]);
@@ -84,6 +105,27 @@ class SaveFileRequestValidatorTest {
         SaveFileRequest request = new SaveFileRequest.SaveFileRequestBuilder()
                 .file(file)
                 .size(1000000000000L)
+                .fileExtension(Files.getFileExtension(file.getOriginalFilename()))
+                .originalName(file.getOriginalFilename())
+                .shouldOverrideExistingFile(true)
+                .parentFolder(this.folder)
+                .parentFolderOwner(ocUser)
+                .initiatingUser(ocUser)
+                .build();
+
+        SaveFileRequestValidator validator = new SaveFileRequestValidator();
+
+        assertThatThrownBy(() -> validator.validateRequest(request)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void test_forbiddenFileExtension() {
+
+        MockMultipartFile file = new MockMultipartFile("TESTFILE", "file.sh","sh", new byte[10]);
+
+        SaveFileRequest request = new SaveFileRequest.SaveFileRequestBuilder()
+                .file(file)
+                .size(100L)
                 .fileExtension(Files.getFileExtension(file.getOriginalFilename()))
                 .originalName(file.getOriginalFilename())
                 .shouldOverrideExistingFile(true)
@@ -135,6 +177,46 @@ class SaveFileRequestValidatorTest {
         SaveFileRequestValidator validator = new SaveFileRequestValidator();
 
         assertThatThrownBy(() -> validator.validateRequest(request)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void test_fileNameIsNotUniqueInFolder_shouldOverrideExistingFile_true() {
+
+        UploadedFolder folder = new UploadedFolder();
+        folder.setId(1L);
+        folder.setParentFolderPath("");
+        folder.setFileSize(100L);
+        folder.setOriginalName("Thomaster");
+        folder.setRelativePath("Thomaster");
+        folder.setOwner(ocUser);
+
+        ContainedFSEInfo fseInfo = new ContainedFSEInfo();
+        fseInfo.setFolder(false);
+        fseInfo.setOriginalName("file.txt");
+        fseInfo.setParentFolderPath("Thomaster");
+        fseInfo.setRelativePath("Thomaster.file_txt");
+        fseInfo.setSize(120L);
+        fseInfo.setId(2L);
+        fseInfo.setOwner(ocUser);
+
+        folder.getContainedFileInfos().add(fseInfo);
+
+        MockMultipartFile file = new MockMultipartFile("TESTFILE", "file.txt","txt", new byte[10]);
+
+        SaveFileRequest request = new SaveFileRequest.SaveFileRequestBuilder()
+                .file(file)
+                .size(100L)
+                .fileExtension(Files.getFileExtension(file.getOriginalFilename()))
+                .originalName(file.getOriginalFilename())
+                .shouldOverrideExistingFile(true)
+                .parentFolder(folder)
+                .parentFolderOwner(ocUser)
+                .initiatingUser(ocUser)
+                .build();
+
+        SaveFileRequestValidator validator = new SaveFileRequestValidator();
+
+        assertThatCode(() -> validator.validateRequest(request)).doesNotThrowAnyException();
     }
 
 }

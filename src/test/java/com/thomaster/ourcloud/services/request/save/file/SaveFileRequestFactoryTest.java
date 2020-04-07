@@ -118,26 +118,19 @@ class SaveFileRequestFactoryTest {
         ocUser.setUsername("Thomaster");
         ocUser.setUsedBytes(100L);
 
-        UploadedFile uploadedFile = new UploadedFile();
-        uploadedFile.setParentFolderPath("");
-        uploadedFile.setFileSize(100L);
-        uploadedFile.setOriginalName("Thomaster");
-        uploadedFile.setRelativePath("Thomaster");
-        uploadedFile.setOwner(ocUser);
-
         when(userService.getCurrentlyLoggedInUser()).thenReturn(Optional.of(ocUser));
-        when(fileService.findFSElementWithContainedFilesByPath_noChecks(any())).thenReturn(uploadedFile);
+        when(fileService.findFSElementWithContainedFilesByPath_noChecks("")).thenReturn(null);
 
         MockMultipartFile file = new MockMultipartFile("TESTFILE", "file.txt","txt", new byte[10]);
 
-        assertThatThrownBy(() -> requestFactory.createSaveFileRequest("Thomaster", file, true)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> requestFactory.createSaveFileRequest("", file, true)).isInstanceOf(IllegalArgumentException.class);
 
         ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
 
         verify(fileService, times(1)).findFSElementWithContainedFilesByPath_noChecks(argumentCaptor.capture());
         verify(userService, times(1)).getCurrentlyLoggedInUser();
 
-        assertThat(argumentCaptor.getValue()).isEqualTo("Thomaster");
+        assertThat(argumentCaptor.getValue()).isEqualTo("");
     }
 
     @Test

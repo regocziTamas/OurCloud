@@ -41,6 +41,7 @@ public class FileRepository {
         fileRepository.updateFileSizeAllAncestorFolders(updateQueryParam, fileSizeDelta);
     }
 
+    @SuppressWarnings("unchecked")
     public <S extends FileSystemElement> S save(S fileSystemElement) {
         return (S) PersistentToDomainConverter.convertToDomain(fileRepository.save(PersistentToDomainConverter.convertToPersistent(fileSystemElement)));
     }

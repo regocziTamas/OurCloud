@@ -78,4 +78,52 @@ class DeleteRequestFactoryTest {
         assertThat(deleteRequest.getParentFolderOwner()).isEqualTo(ocUser);
         assertThat(deleteRequest.getInitiatingUser().get()).isEqualTo(ocUser);
     }
+
+    @Test
+    void test_fileToDeleteDoesNotExist() {
+        OCUser ocUser = new OCUser();
+        ocUser.setId(1L);
+        ocUser.setUsername("Thomaster");
+        ocUser.setUsedBytes(100L);
+
+        when(userService.getCurrentlyLoggedInUser()).thenReturn(Optional.of(ocUser));
+        when(fileService.findFSElementWithContainedFilesByPath_noChecks("Thomaster.file_to_delete_txt")).thenReturn(null);
+
+        assertThatCode(() -> requestFactory.createDeleteRequest("Thomaster.file_to_delete_txt")).isInstanceOf(IllegalArgumentException.class);
+
+        ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
+
+        verify(fileService, times(1)).findFSElementWithContainedFilesByPath_noChecks(argumentCaptor.capture());
+        verify(userService, times(1)).getCurrentlyLoggedInUser();
+
+        assertThat(argumentCaptor.getValue()).isEqualTo("Thomaster.file_to_delete_txt");
+    }
+
+    @Test
+    void test_parentFolderOfFileToDeleteDoesNotExist() {
+        OCUser ocUser = new OCUser();
+        ocUser.setId(1L);
+        ocUser.setUsername("Thomaster");
+        ocUser.setUsedBytes(100L);
+
+        UploadedFile uploadedFile = new UploadedFile();
+        uploadedFile.setParentFolderPath("Thomaster");
+        uploadedFile.setFileSize(100L);
+        uploadedFile.setOriginalName("file_to_delete.txt");
+        uploadedFile.setRelativePath("Thomaster/file_to_delete_txt");
+        uploadedFile.setOwner(ocUser);
+
+        when(userService.getCurrentlyLoggedInUser()).thenReturn(Optional.of(ocUser));
+        when(fileService.findFSElementWithContainedFilesByPath_noChecks("Thomaster")).thenReturn(null);
+        when(fileService.findFSElementWithContainedFilesByPath_noChecks("Thomaster.file_to_delete_txt")).thenReturn(uploadedFile);
+
+        assertThatCode(() -> requestFactory.createDeleteRequest("Thomaster.file_to_delete_txt")).isInstanceOf(IllegalArgumentException.class);
+
+        ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
+
+        verify(fileService, times(2)).findFSElementWithContainedFilesByPath_noChecks(argumentCaptor.capture());
+        verify(userService, times(1)).getCurrentlyLoggedInUser();
+
+        assertThat(argumentCaptor.getAllValues()).containsExactlyInAnyOrder("Thomaster", "Thomaster.file_to_delete_txt");
+    }
 }

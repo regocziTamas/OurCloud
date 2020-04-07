@@ -35,6 +35,7 @@ public class OCUserService {
 
     public Optional<OCUser> getCurrentlyLoggedInUser() {
         String username = getCurrentlyLoggedInUsername();
+
         if (username == null)
             return Optional.empty();
 

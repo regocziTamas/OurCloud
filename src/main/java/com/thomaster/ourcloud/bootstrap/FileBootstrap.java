@@ -8,6 +8,7 @@ import com.thomaster.ourcloud.model.filesystem.UploadedFile;
 import com.thomaster.ourcloud.model.filesystem.UploadedFolder;
 import com.thomaster.ourcloud.model.user.OCUser;
 import com.thomaster.ourcloud.model.user.Role;
+import com.thomaster.ourcloud.repositories.UserRepository;
 import com.thomaster.ourcloud.repositories.file.FileRepository;
 import com.thomaster.ourcloud.services.FileService;
 import com.thomaster.ourcloud.services.OCUserService;
@@ -27,16 +28,19 @@ import java.util.Collections;
 public class FileBootstrap implements ApplicationListener<ContextRefreshedEvent> {
 
     private OCUserService userService;
+    private UserRepository userRepository;
     private FileRepository fileRepository;
     private FileService fileService;
 
     public FileBootstrap(OCUserService userService,
                          FileRepository fileRepository,
-                         FileService fileService){
+                         FileService fileService,
+                         UserRepository userRepository){
 
         this.fileRepository = fileRepository;
         this.userService = userService;
         this.fileService = fileService;
+        this.userRepository = userRepository;
     }
 
 
@@ -156,9 +160,6 @@ public class FileBootstrap implements ApplicationListener<ContextRefreshedEvent>
 
         UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken("Thomaster", null, Collections.singletonList(new SimpleGrantedAuthority("ADMIN")));
         SecurityContextHolder.getContext().setAuthentication(auth);
-
-        FileSystemElement folder = fileRepository.findOneByPath("cgcvf");
-        System.out.println(folder);
 
 //        FileSystemElementJSON jsonFolder = FileSystemElementJSON.of(folder);
 //        try {
