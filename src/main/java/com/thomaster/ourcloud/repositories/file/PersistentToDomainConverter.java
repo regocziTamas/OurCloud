@@ -24,6 +24,10 @@ public class PersistentToDomainConverter {
         fse.setParentFolderPath(persistentFSE.getParentFolderPath());
         fse.setRelativePath(persistentFSE.getRelativePath());
         fse.setFileSize(persistentFSE.getFileSize());
+
+        if (fse instanceof UploadedFile)
+            ((UploadedFile) fse).setFilenameOnDisk(((PersistentUploadedFile) persistentFSE).getFilenameOnDisk());
+
         return fse;
     }
 
@@ -65,6 +69,9 @@ public class PersistentToDomainConverter {
         fse.setParentFolderPath(domainFSE.getParentFolderPath());
         fse.setRelativePath(domainFSE.getRelativePath());
         fse.setFileSize(domainFSE.getFileSize());
+
+        if(fse instanceof PersistentUploadedFile)
+            ((PersistentUploadedFile) fse).setFilenameOnDisk(((UploadedFile) domainFSE).getFilenameOnDisk());
 
         return fse;
     }

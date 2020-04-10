@@ -5,6 +5,7 @@ import com.thomaster.ourcloud.model.filesystem.FileSystemElement;
 import com.thomaster.ourcloud.services.request.base.BaseRequest;
 import com.thomaster.ourcloud.services.request.delete.DeleteRequest;
 import com.thomaster.ourcloud.services.request.delete.DeleteRequestValidator;
+import com.thomaster.ourcloud.services.request.download.DownloadRequestValidator;
 import com.thomaster.ourcloud.services.request.marker.PostQueryRequestValidation;
 import com.thomaster.ourcloud.services.request.marker.PostQueryRequestValidationType;
 import com.thomaster.ourcloud.services.request.marker.PreQueryRequestValidation;
@@ -39,18 +40,31 @@ public class RequestValidatorAspect {
 
     private DeleteRequestValidator deleteRequestValidator;
 
-    public RequestValidatorAspect(ReadRequestValidator readRequestValidator, ReadRequestFactory readRequestFactory, SaveFolderRequestValidator saveFolderRequestValidator, SaveFileRequestValidator saveFileRequestValidator, DeleteRequestValidator deleteRequestValidator) {
+    private DownloadRequestValidator downloadRequestValidator;
+
+    public RequestValidatorAspect(ReadRequestValidator readRequestValidator,
+                                  ReadRequestFactory readRequestFactory,
+                                  SaveFolderRequestValidator saveFolderRequestValidator,
+                                  SaveFileRequestValidator saveFileRequestValidator,
+                                  DeleteRequestValidator deleteRequestValidator,
+                                  DownloadRequestValidator downloadRequestValidator) {
         this.readRequestValidator = readRequestValidator;
         this.readRequestFactory = readRequestFactory;
         this.saveFolderRequestValidator = saveFolderRequestValidator;
         this.saveFileRequestValidator = saveFileRequestValidator;
         this.deleteRequestValidator = deleteRequestValidator;
+        this.downloadRequestValidator = downloadRequestValidator;
     }
 
     //@AfterReturning(value = "execution(* com.thomaster.ourcloud.services.FileService.findFSElementWithFullTreeByPath(..))", returning = "fileSystemElement")
     public void validateReadRequest(FileSystemElement fileSystemElement) {
         ReadRequest readRequest = readRequestFactory.createReadRequest(fileSystemElement);
         readRequestValidator.validateRequest(readRequest);
+    }
+
+    public void validateDownloadFileRequest(FileSystemElement fileSystemElement) {
+        ReadRequest downloadFileRequest = readRequestFactory.createReadRequest(fileSystemElement);
+        downloadRequestValidator.validateRequest(downloadFileRequest);
     }
 
     //@Before("execution(* com.thomaster.ourcloud.services.FileService.saveFolder(..)) && args(request,..)")
@@ -95,6 +109,9 @@ public class RequestValidatorAspect {
         switch (value) {
             case READ:
                 validateReadRequest(fileSystemElement);
+                break;
+            case DOWNLOAD:
+                validateDownloadFileRequest(fileSystemElement);
                 break;
             default: throw new UnsupportedOperationException("Unknown PostQueryRequestValidationType");
         }

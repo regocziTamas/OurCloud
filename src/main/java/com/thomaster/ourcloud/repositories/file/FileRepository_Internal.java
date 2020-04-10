@@ -14,7 +14,7 @@ interface FileRepository_Internal extends JpaRepository<PersistentFileSystemElem
 
     /**SELECT * FROM persistent_file_system_element WHERE relative_path ~ lquery('Thomaster.*{0,1}')*/
 
-    @Query(value = "SELECT * FROM file_system_element WHERE relative_path ~ lquery(:pathToSearch)", nativeQuery = true)
+    @Query(value = "SELECT * FROM persistent_file_system_element WHERE relative_path ~ lquery(:pathToSearch)", nativeQuery = true)
     Set<PersistentFileSystemElement> findAllByPath(@Param("pathToSearch") String pathToSearch);
 
     @Query(value = "SELECT * FROM persistent_file_system_element WHERE relative_path ~ lquery(:pathToSearch)", nativeQuery = true)
@@ -22,12 +22,12 @@ interface FileRepository_Internal extends JpaRepository<PersistentFileSystemElem
 
     @Transactional
     @Modifying
-    @Query(value = "DELETE FROM file_system_element WHERE relative_path ~ lquery(:pathToDelete)", nativeQuery = true)
+    @Query(value = "DELETE FROM persistent_file_system_element WHERE relative_path ~ lquery(:pathToDelete)", nativeQuery = true)
     void deleteRecursivelyByPath(@Param("pathToDelete") String pathToDelete);
 
     @Transactional
     @Modifying
-    @Query(value = "UPDATE file_system_element SET file_size = file_size + :fileSizeDelta WHERE relative_path @> ltree(:pathToDelete)", nativeQuery = true)
-    void updateFileSizeAllAncestorFolders(@Param("pathToDelete") String pathToUpdate, @Param("fileSizeDelta") Long fileSizeDelta);
+    @Query(value = "UPDATE persistent_file_system_element SET file_size = file_size + :fileSizeDelta WHERE relative_path @> ltree(:pathToUpdate)", nativeQuery = true)
+    void updateFileSizeAllAncestorFolders(@Param("pathToUpdate") String pathToUpdate, @Param("fileSizeDelta") Long fileSizeDelta);
 
 }

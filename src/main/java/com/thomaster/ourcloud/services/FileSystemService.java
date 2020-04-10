@@ -1,11 +1,14 @@
 package com.thomaster.ourcloud.services;
 
+import com.thomaster.ourcloud.model.filesystem.UploadedFile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
@@ -14,33 +17,41 @@ import java.util.Comparator;
 public class FileSystemService {
 
     FilePathService filePathService;
+    private static final String STORAGE_PATH = "/home/thomaster/ourcloud_userfiles";
 
     public FileSystemService(FilePathService filePathService) {
         this.filePathService = filePathService;
     }
 
-    public void writeFile(String absolutePath, MultipartFile fileToSave) {
+
+
+    public void writeFile(MultipartFile fileToSave, String filenameOnDisk) {
+
         try {
-            FileOutputStream fos = new FileOutputStream(absolutePath);
-            fos.write(fileToSave.getBytes());
-            fos.close();
+            FileOutputStream outputStream = new FileOutputStream(STORAGE_PATH + "/" + filenameOnDisk);
+            outputStream.write(fileToSave.getBytes());
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void writeFile(MultipartFile fileToSave) {
-        System.out.println("========= File writing not working, should be implemented! =========");
-    }
+    public void addDownloadFileToResponse(UploadedFile fileToDownload, HttpServletResponse response) {
 
-    public void deleteRecursively(String absolutePath) {
         try {
-            Files.walk(Path.of(absolutePath))
-                    .sorted(Comparator.reverseOrder())
-                    .map(Path::toFile)
-                    .forEach(File::delete);
+            FileInputStream inputStream = new FileInputStream(STORAGE_PATH + "/" + fileToDownload.getFilenameOnDisk());
+            response.getOutputStream().write(inputStream.readAllBytes());
+
+            String fileName = URLEncoder.encode(fileToDownload.getOriginalName(), StandardCharsets.UTF_8);
+
+            fileName = URLDecoder.decode(fileName, StandardCharsets.ISO_8859_1);
+
+            response.setContentType("application/x-msdownload");
+            response.setHeader("Content-disposition", "attachment; filename=" + fileName);
+
+        } catch (FileNotFoundException e) {
+            System.out.println("File not found!");
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Some IO exception happened!");
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.thomaster.ourcloud.repositories.file;
 
 import com.thomaster.ourcloud.model.filesystem.FileSystemElement;
+import com.thomaster.ourcloud.model.filesystem.UploadedFile;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
@@ -17,7 +18,7 @@ public class FileRepository {
         this.fileRepository = fileRepository;
     }
 
-    public FileSystemElement findOneByPath(String pathToSearch) {
+    public FileSystemElement findOneByPathWithContainedFiles(String pathToSearch) {
 
         String relativePath = pathToSearch + QUERY_POSTFIX_SEARCH_FIRST_LEVEL_ONLY;
 
@@ -29,6 +30,19 @@ public class FileRepository {
         return new PersistentFSEHierarchyConverter(persistedResult, pathToSearch).convertAndBuildHierarchy();
     };
 
+    public FileSystemElement findOneByPathWithoutContainedFiles(String pathToSearch) {
+        Set<PersistentFileSystemElement> persistedResult = fileRepository.findOneByPath(pathToSearch);
+
+        if (persistedResult.isEmpty())
+            return null;
+        else if(persistedResult.size() > 1)
+            throw new IllegalArgumentException("Not possible");
+        else {
+            return new PersistentFSEHierarchyConverter(persistedResult, pathToSearch).convertAndBuildHierarchy();
+        }
+
+    }
+
     public void deleteRecursivelyByPath(String pathToDelete) {
         String deleteQueryParam = pathToDelete + QUERY_POSTFIX_SEARCH_ALL_LEVELS_RECURSIVELY;
 
@@ -36,14 +50,15 @@ public class FileRepository {
     };
 
     public void updateFileSizeAllAncestorFolders(String pathToUpdate, Long fileSizeDelta) {
-        String updateQueryParam = pathToUpdate + QUERY_POSTFIX_SEARCH_ALL_LEVELS_RECURSIVELY;
-
-        fileRepository.updateFileSizeAllAncestorFolders(updateQueryParam, fileSizeDelta);
+        fileRepository.updateFileSizeAllAncestorFolders(pathToUpdate, fileSizeDelta);
     }
 
     @SuppressWarnings("unchecked")
     public <S extends FileSystemElement> S save(S fileSystemElement) {
-        return (S) PersistentToDomainConverter.convertToDomain(fileRepository.save(PersistentToDomainConverter.convertToPersistent(fileSystemElement)));
+        PersistentFileSystemElement persistentModel = PersistentToDomainConverter.convertToPersistent(fileSystemElement);
+        PersistentFileSystemElement savedPersistedModel = fileRepository.save(persistentModel);
+
+        return (S) PersistentToDomainConverter.convertToDomain(savedPersistedModel);
     }
 
 

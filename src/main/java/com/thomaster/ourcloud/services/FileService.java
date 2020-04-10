@@ -14,6 +14,9 @@ import com.thomaster.ourcloud.services.request.save.file.SaveFileRequest;
 import com.thomaster.ourcloud.services.request.save.folder.SaveFolderRequest;
 import org.springframework.stereotype.Service;
 
+import java.io.InputStream;
+import java.util.UUID;
+
 @Service
 public class FileService {
 
@@ -45,7 +48,7 @@ public class FileService {
         if (Strings.isNullOrEmpty(pathToFileToRead))
             return null;
 
-        return fileRepository.findOneByPath(pathToFileToRead);
+        return fileRepository.findOneByPathWithContainedFiles(pathToFileToRead);
     }
 
     @PreQueryRequestValidation(PreQueryRequestValidationType.DELETE)
@@ -59,7 +62,7 @@ public class FileService {
         newFolder.setOwner(request.getInitiatingUser().get());
         newFolder.setParentFolderPath(request.getParentFolder().getRelativePath());
         newFolder.setOriginalName(request.getOriginalName());
-        newFolder.setRelativePath(request.getParentFolder().getParentFolderPath() + "." + request.getOriginalName());
+        newFolder.setRelativePath(request.getParentFolder().getRelativePath() + "." + request.getOriginalName());
 
         fileRepository.save(newFolder);
     }
@@ -71,11 +74,23 @@ public class FileService {
         newFile.setParentFolderPath(request.getParentFolder().getRelativePath());
         newFile.setOriginalName(request.getOriginalName());
         newFile.setFileSize(request.getSize());
-        newFile.setRelativePath(request.getParentFolder().getParentFolderPath() + "." + request.getOriginalName());
+        newFile.setRelativePath(request.getParentFolder().getRelativePath() + "." + makeNamePathFriendly(request.getOriginalName()));
 
-        fileSystemService.writeFile(request.getFile());
+        String filenameOnDisk = UUID.randomUUID().toString();
+        newFile.setFilenameOnDisk(filenameOnDisk);
+
+        fileSystemService.writeFile(request.getFile(), filenameOnDisk);
 
         fileRepository.save(newFile);
-        fileRepository.updateFileSizeAllAncestorFolders(request.getParentFolder().getParentFolderPath(), request.getSize());
+        fileRepository.updateFileSizeAllAncestorFolders(request.getParentFolder().getRelativePath(), request.getSize());
+    }
+
+    private String makeNamePathFriendly(String originalName){
+        return originalName.replace(" ", "_").replace(".", "_");
+    }
+
+    @PostQueryRequestValidation(PostQueryRequestValidationType.DOWNLOAD)
+    public FileSystemElement queryFileToDownload(String pathToFileToRead) {
+        return fileRepository.findOneByPathWithoutContainedFiles(pathToFileToRead);
     }
 }

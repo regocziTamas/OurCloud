@@ -28,6 +28,9 @@ public class RequestValidationException extends RuntimeException {
     public static final String NO_FSE_FOUND_CODE = "ReqValExc08";
     public static final String NO_FSE_FOUND_MSG = "No {0} exists with the following path: {1}";
 
+    public static final String NOT_A_FILE_DOWNLOAD_CODE = "ReqValExc09";
+    public static final String NOT_A_FILE_DOWNLOAD_MSG = "''{0}'' is not a file, it cannot be downloaded!";
+
 
     public String errorCode;
     public String errorMsg;
@@ -80,5 +83,10 @@ public class RequestValidationException extends RuntimeException {
 
     public static RequestValidationException notLoggedIn() {
         return new RequestValidationException(NOT_LOGGED_IN_CODE, NOT_LOGGED_IN_MSG);
+    }
+
+    public static RequestValidationException notAFile(String path) {
+        String msg = MessageFormat.format(NOT_A_FILE_DOWNLOAD_MSG, path);
+        return new RequestValidationException(NOT_A_FILE_DOWNLOAD_CODE, msg);
     }
 }
