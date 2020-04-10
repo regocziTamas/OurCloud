@@ -2,9 +2,9 @@ package com.thomaster.ourcloud.services.request.read;
 
 import com.thomaster.ourcloud.model.filesystem.UploadedFile;
 import com.thomaster.ourcloud.model.user.OCUser;
+import com.thomaster.ourcloud.services.request.RequestValidationException;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.assertj.core.api.Assertions.*;
 
 class ReadRequestValidatorTest {
@@ -63,6 +63,7 @@ class ReadRequestValidatorTest {
 
         ReadRequestValidator readRequestValidator = new ReadRequestValidator();
 
-        assertThatCode(() -> readRequestValidator.validateRequest(readRequest)).isInstanceOf(IllegalArgumentException.class);
+        RequestValidationException requestValidationException = catchThrowableOfType(() -> readRequestValidator.validateRequest(readRequest), RequestValidationException.class);
+        assertThat(requestValidationException.getErrorCode()).isEqualTo(RequestValidationException.NO_READ_ACCESS_CODE);
     }
 }

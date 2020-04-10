@@ -3,6 +3,7 @@ package com.thomaster.ourcloud.services.request.delete;
 import com.thomaster.ourcloud.model.filesystem.UploadedFile;
 import com.thomaster.ourcloud.model.filesystem.UploadedFolder;
 import com.thomaster.ourcloud.model.user.OCUser;
+import com.thomaster.ourcloud.services.request.RequestValidationException;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.*;
@@ -81,6 +82,7 @@ class DeleteRequestValidatorTest {
 
         DeleteRequestValidator validator = new DeleteRequestValidator();
 
-        assertThatThrownBy(() -> validator.validateRequest(request)).isInstanceOf(IllegalArgumentException.class);
+        RequestValidationException requestValidationException = catchThrowableOfType(() -> validator.validateRequest(request), RequestValidationException.class);
+        assertThat(requestValidationException.getErrorCode()).isEqualTo(RequestValidationException.NO_WRITE_PERM_CODE);
     }
 }

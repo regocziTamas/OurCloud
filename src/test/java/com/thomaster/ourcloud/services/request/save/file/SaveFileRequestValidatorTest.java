@@ -4,6 +4,7 @@ import com.google.common.io.Files;
 import com.thomaster.ourcloud.model.filesystem.ContainedFSEInfo;
 import com.thomaster.ourcloud.model.filesystem.UploadedFolder;
 import com.thomaster.ourcloud.model.user.OCUser;
+import com.thomaster.ourcloud.services.request.RequestValidationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
 
@@ -73,7 +74,8 @@ class SaveFileRequestValidatorTest {
 
         SaveFileRequestValidator validator = new SaveFileRequestValidator();
 
-        assertThatThrownBy(() -> validator.validateRequest(request)).isInstanceOf(IllegalArgumentException.class);
+        RequestValidationException requestValidationException = catchThrowableOfType(() -> validator.validateRequest(request), RequestValidationException.class);
+        assertThat(requestValidationException.getErrorCode()).isEqualTo(RequestValidationException.NO_WRITE_PERM_CODE);
     }
 
     @Test
@@ -94,7 +96,8 @@ class SaveFileRequestValidatorTest {
 
         SaveFileRequestValidator validator = new SaveFileRequestValidator();
 
-        assertThatThrownBy(() -> validator.validateRequest(request)).isInstanceOf(IllegalArgumentException.class);
+        RequestValidationException requestValidationException = catchThrowableOfType(() -> validator.validateRequest(request), RequestValidationException.class);
+        assertThat(requestValidationException.getErrorCode()).isEqualTo(RequestValidationException.NOT_LOGGED_IN_CODE);
     }
 
     @Test
@@ -115,7 +118,8 @@ class SaveFileRequestValidatorTest {
 
         SaveFileRequestValidator validator = new SaveFileRequestValidator();
 
-        assertThatThrownBy(() -> validator.validateRequest(request)).isInstanceOf(IllegalArgumentException.class);
+        RequestValidationException requestValidationException = catchThrowableOfType(() -> validator.validateRequest(request), RequestValidationException.class);
+        assertThat(requestValidationException.getErrorCode()).isEqualTo(RequestValidationException.NO_MORE_STORAGE_CODE);
     }
 
     @Test
@@ -136,7 +140,8 @@ class SaveFileRequestValidatorTest {
 
         SaveFileRequestValidator validator = new SaveFileRequestValidator();
 
-        assertThatThrownBy(() -> validator.validateRequest(request)).isInstanceOf(IllegalArgumentException.class);
+        RequestValidationException requestValidationException = catchThrowableOfType(() -> validator.validateRequest(request), RequestValidationException.class);
+        assertThat(requestValidationException.getErrorCode()).isEqualTo(RequestValidationException.FORBIDDEN_EXT_CODE);
     }
 
     @Test
@@ -176,7 +181,8 @@ class SaveFileRequestValidatorTest {
 
         SaveFileRequestValidator validator = new SaveFileRequestValidator();
 
-        assertThatThrownBy(() -> validator.validateRequest(request)).isInstanceOf(IllegalArgumentException.class);
+        RequestValidationException requestValidationException = catchThrowableOfType(() -> validator.validateRequest(request), RequestValidationException.class);
+        assertThat(requestValidationException.getErrorCode()).isEqualTo(RequestValidationException.FILENAME_NOT_UNIQUE_CODE);
     }
 
     @Test

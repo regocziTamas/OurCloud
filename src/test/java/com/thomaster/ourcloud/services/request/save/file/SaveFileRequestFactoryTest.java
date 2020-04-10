@@ -5,6 +5,7 @@ import com.thomaster.ourcloud.model.filesystem.UploadedFolder;
 import com.thomaster.ourcloud.model.user.OCUser;
 import com.thomaster.ourcloud.services.FileService;
 import com.thomaster.ourcloud.services.OCUserService;
+import com.thomaster.ourcloud.services.request.RequestValidationException;
 import org.junit.Before;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,8 +18,7 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -108,7 +108,7 @@ class SaveFileRequestFactoryTest {
         assertThat(saveFileRequest.isShouldOverrideExistingFile()).isEqualTo(true);
         assertThat(saveFileRequest.getParentFolder()).isEqualTo(folder);
         assertThat(saveFileRequest.getParentFolderOwner()).isEqualTo(ocUser);
-        assertThat(saveFileRequest.getInitiatingUser().isPresent()).isFalse();
+        assertThat(saveFileRequest.getInitiatingUser()).isEmpty();
     }
 
     @Test
@@ -119,18 +119,19 @@ class SaveFileRequestFactoryTest {
         ocUser.setUsedBytes(100L);
 
         when(userService.getCurrentlyLoggedInUser()).thenReturn(Optional.of(ocUser));
-        when(fileService.findFSElementWithContainedFilesByPath_noChecks("")).thenReturn(null);
+        when(fileService.findFSElementWithContainedFilesByPath_noChecks("Thomaster")).thenReturn(null);
 
         MockMultipartFile file = new MockMultipartFile("TESTFILE", "file.txt","txt", new byte[10]);
 
-        assertThatThrownBy(() -> requestFactory.createSaveFileRequest("", file, true)).isInstanceOf(IllegalArgumentException.class);
+        RequestValidationException requestValidationException = catchThrowableOfType(() -> requestFactory.createSaveFileRequest("Thomaster", file, true), RequestValidationException.class);
+        assertThat(requestValidationException.getErrorCode()).isEqualTo(RequestValidationException.NO_FSE_FOUND_CODE);
 
         ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
 
         verify(fileService, times(1)).findFSElementWithContainedFilesByPath_noChecks(argumentCaptor.capture());
         verify(userService, times(1)).getCurrentlyLoggedInUser();
 
-        assertThat(argumentCaptor.getValue()).isEqualTo("");
+        assertThat(argumentCaptor.getValue()).isEqualTo("Thomaster");
     }
 
     @Test
@@ -152,7 +153,8 @@ class SaveFileRequestFactoryTest {
 
         MockMultipartFile file = new MockMultipartFile("TESTFILE", "file.txt","txt", new byte[10]);
 
-        assertThatThrownBy(() -> requestFactory.createSaveFileRequest("Thomaster.file_that_is_not_folder_txt", file, true)).isInstanceOf(IllegalArgumentException.class);
+        RequestValidationException requestValidationException = catchThrowableOfType(() -> requestFactory.createSaveFileRequest("Thomaster.file_that_is_not_folder_txt", file, true), RequestValidationException.class);
+        assertThat(requestValidationException.getErrorCode()).isEqualTo(RequestValidationException.NO_FSE_FOUND_CODE);
 
         ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
 

@@ -5,6 +5,7 @@ import com.thomaster.ourcloud.model.filesystem.UploadedFolder;
 import com.thomaster.ourcloud.model.user.OCUser;
 import com.thomaster.ourcloud.services.FileService;
 import com.thomaster.ourcloud.services.OCUserService;
+import com.thomaster.ourcloud.services.request.RequestValidationException;
 import org.junit.Before;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -111,7 +112,8 @@ class SaveFolderRequestFactoryTest {
         when(userService.getCurrentlyLoggedInUser()).thenReturn(Optional.of(ocUser));
         when(fileService.findFSElementWithContainedFilesByPath_noChecks(any())).thenReturn(null);
 
-        assertThatThrownBy(() -> requestFactory.createSaveFolderRequest("Thomaster", "New Folder", true)).isInstanceOf(IllegalArgumentException.class);
+        RequestValidationException requestValidationException = catchThrowableOfType(() -> requestFactory.createSaveFolderRequest("Thomaster", "New Folder", true), RequestValidationException.class);
+        assertThat(requestValidationException.getErrorCode()).isEqualTo(RequestValidationException.NO_FSE_FOUND_CODE);
 
         ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
 
@@ -136,8 +138,8 @@ class SaveFolderRequestFactoryTest {
         when(userService.getCurrentlyLoggedInUser()).thenReturn(Optional.of(ocUser));
         when(fileService.findFSElementWithContainedFilesByPath_noChecks(any())).thenReturn(uploadedFile);
 
-        assertThatThrownBy(() -> requestFactory.createSaveFolderRequest("Thomaster.file_that_is_not_folder_txt", "New Folder", true))
-                .isInstanceOf(IllegalArgumentException.class);
+        RequestValidationException requestValidationException = catchThrowableOfType(() -> requestFactory.createSaveFolderRequest("Thomaster.file_that_is_not_folder_txt", "New Folder", true), RequestValidationException.class);
+        assertThat(requestValidationException.getErrorCode()).isEqualTo(RequestValidationException.NO_FSE_FOUND_CODE);
 
         ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
 

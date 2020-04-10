@@ -4,12 +4,9 @@ import com.thomaster.ourcloud.model.filesystem.UploadedFolder;
 import com.thomaster.ourcloud.model.user.OCUser;
 import com.thomaster.ourcloud.services.FileService;
 import com.thomaster.ourcloud.services.OCUserService;
-import com.thomaster.ourcloud.services.request.delete.DeleteRequest;
-import com.thomaster.ourcloud.services.request.delete.DeleteRequestFactory;
 import org.junit.Before;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -17,7 +14,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 

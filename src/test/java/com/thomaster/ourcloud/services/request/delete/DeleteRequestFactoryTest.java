@@ -5,7 +5,7 @@ import com.thomaster.ourcloud.model.filesystem.UploadedFolder;
 import com.thomaster.ourcloud.model.user.OCUser;
 import com.thomaster.ourcloud.services.FileService;
 import com.thomaster.ourcloud.services.OCUserService;
-import com.thomaster.ourcloud.services.request.save.folder.SaveFolderRequestFactory;
+import com.thomaster.ourcloud.services.request.RequestValidationException;
 import org.junit.Before;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,9 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -129,7 +127,8 @@ class DeleteRequestFactoryTest {
         when(userService.getCurrentlyLoggedInUser()).thenReturn(Optional.of(ocUser));
         when(fileService.findFSElementWithContainedFilesByPath_noChecks("Thomaster.file_to_delete_txt")).thenReturn(null);
 
-        assertThatCode(() -> requestFactory.createDeleteRequest("Thomaster.file_to_delete_txt")).isInstanceOf(IllegalArgumentException.class);
+        RequestValidationException requestValidationException = catchThrowableOfType(() -> requestFactory.createDeleteRequest("Thomaster.file_to_delete_txt"), RequestValidationException.class);
+        assertThat(requestValidationException.getErrorCode()).isEqualTo(RequestValidationException.NO_FSE_FOUND_CODE);
 
         ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
 
@@ -157,7 +156,8 @@ class DeleteRequestFactoryTest {
         when(fileService.findFSElementWithContainedFilesByPath_noChecks("Thomaster")).thenReturn(null);
         when(fileService.findFSElementWithContainedFilesByPath_noChecks("Thomaster.file_to_delete_txt")).thenReturn(uploadedFile);
 
-        assertThatCode(() -> requestFactory.createDeleteRequest("Thomaster.file_to_delete_txt")).isInstanceOf(IllegalArgumentException.class);
+        RequestValidationException requestValidationException = catchThrowableOfType(() -> requestFactory.createDeleteRequest("Thomaster.file_to_delete_txt"), RequestValidationException.class);
+        assertThat(requestValidationException.getErrorCode()).isEqualTo(RequestValidationException.NO_FSE_FOUND_CODE);
 
         ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
 

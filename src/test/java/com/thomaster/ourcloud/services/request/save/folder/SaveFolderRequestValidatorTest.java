@@ -1,16 +1,11 @@
 package com.thomaster.ourcloud.services.request.save.folder;
 
-import com.google.common.io.Files;
 import com.thomaster.ourcloud.model.filesystem.ContainedFSEInfo;
 import com.thomaster.ourcloud.model.filesystem.UploadedFolder;
 import com.thomaster.ourcloud.model.user.OCUser;
 import com.thomaster.ourcloud.services.request.RequestValidationException;
-import com.thomaster.ourcloud.services.request.save.file.SaveFileRequest;
-import com.thomaster.ourcloud.services.request.save.file.SaveFileRequestValidator;
 import org.junit.jupiter.api.Test;
-import org.springframework.mock.web.MockMultipartFile;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.assertj.core.api.Assertions.*;
 
 class SaveFolderRequestValidatorTest {
@@ -67,7 +62,8 @@ class SaveFolderRequestValidatorTest {
 
         SaveFolderRequestValidator validator = new SaveFolderRequestValidator();
 
-        assertThatThrownBy(() -> validator.validateRequest(request)).isInstanceOf(IllegalArgumentException.class);
+        RequestValidationException requestValidationException = catchThrowableOfType(() -> validator.validateRequest(request), RequestValidationException.class);
+        assertThat(requestValidationException.getErrorCode()).isEqualTo(RequestValidationException.NO_WRITE_PERM_CODE);
     }
 
     @Test
