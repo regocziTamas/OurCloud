@@ -18,6 +18,8 @@ public class ContainedFSEInfo {
 
     private boolean isFolder;
 
+    private String mimeType;
+
     public Long getId() {
         return id;
     }
@@ -72,6 +74,14 @@ public class ContainedFSEInfo {
 
     public void setFolder(boolean folder) {
         isFolder = folder;
+    }
+
+    public String getMimeType() {
+        return mimeType;
+    }
+
+    public void setMimeType(String mimeType) {
+        this.mimeType = mimeType;
     }
 
     @Override

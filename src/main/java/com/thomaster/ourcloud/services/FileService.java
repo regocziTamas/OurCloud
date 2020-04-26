@@ -13,9 +13,12 @@ import com.thomaster.ourcloud.services.request.delete.DeleteRequest;
 import com.thomaster.ourcloud.services.request.save.file.SaveFileRequest;
 import com.thomaster.ourcloud.services.request.save.folder.SaveFolderRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class FileService {
@@ -54,6 +57,7 @@ public class FileService {
     @PreQueryRequestValidation(PreQueryRequestValidationType.DELETE)
     public void deleteFSElementRecursively(DeleteRequest deleteRequest) {
         fileRepository.deleteRecursivelyByPath(deleteRequest.getFileToDelete().getRelativePath());
+        fileRepository.updateFileSizeAllAncestorFolders(deleteRequest.getParentFolder().getRelativePath(), deleteRequest.getFileToDelete().getFileSize() * -1);
     }
 
     @PreQueryRequestValidation(PreQueryRequestValidationType.UPLOAD_FOLDER)
@@ -79,6 +83,8 @@ public class FileService {
         String filenameOnDisk = UUID.randomUUID().toString();
         newFile.setFilenameOnDisk(filenameOnDisk);
 
+        newFile.setMimeType(request.getMimeType());
+
         fileSystemService.writeFile(request.getFile(), filenameOnDisk);
 
         fileRepository.save(newFile);
@@ -86,7 +92,13 @@ public class FileService {
     }
 
     private String makeNamePathFriendly(String originalName){
-        return originalName.replace(" ", "_").replace(".", "_");
+        return Arrays.stream(originalName.split(""))
+                .map(character -> {
+                    if (character.matches("[A-Za-z0-9|_]"))
+                        return character;
+                    return "_";
+                })
+                .collect(Collectors.joining());
     }
 
     @PostQueryRequestValidation(PostQueryRequestValidationType.DOWNLOAD)

@@ -18,6 +18,8 @@ public class ContainedFSEInfoJSON {
 
     private boolean isFolder;
 
+    private String mimeType;
+
     public ContainedFSEInfoJSON(ContainedFSEInfo source) {
         this.id = source.getId();
         this.relativePath = source.getRelativePath();
@@ -26,6 +28,7 @@ public class ContainedFSEInfoJSON {
         this.parentFolderPath = source.getParentFolderPath();
         this.size = source.getSize();
         this.isFolder = source.isFolder();
+        this.mimeType = source.getMimeType();
     }
 
     public Long getId() {
@@ -82,5 +85,13 @@ public class ContainedFSEInfoJSON {
 
     public void setFolder(boolean folder) {
         isFolder = folder;
+    }
+
+    public String getMimeType() {
+        return mimeType;
+    }
+
+    public void setMimeType(String mimeType) {
+        this.mimeType = mimeType;
     }
 }

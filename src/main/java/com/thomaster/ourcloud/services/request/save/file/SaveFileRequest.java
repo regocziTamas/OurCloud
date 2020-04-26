@@ -10,12 +10,22 @@ public class SaveFileRequest extends BaseSaveRequest {
     private MultipartFile file;
     private long size;
     private String fileExtension;
+    private String mimeType;
 
-    private SaveFileRequest(OCUser initiatingUser, OCUser parentFolderOwner, UploadedFolder parentFolder, MultipartFile file, long size, String fileExtension, boolean shouldOverrideExistingFile, String originalName) {
+    private SaveFileRequest(OCUser initiatingUser,
+                            OCUser parentFolderOwner,
+                            UploadedFolder parentFolder,
+                            MultipartFile file,
+                            long size,
+                            String fileExtension,
+                            boolean shouldOverrideExistingFile,
+                            String originalName,
+                            String mimeType) {
         super(initiatingUser, parentFolderOwner, parentFolder, shouldOverrideExistingFile, originalName);
         this.file = file;
         this.size = size;
         this.fileExtension = fileExtension;
+        this.mimeType = mimeType;
     }
 
     public MultipartFile getFile() {
@@ -30,11 +40,16 @@ public class SaveFileRequest extends BaseSaveRequest {
         return fileExtension;
     }
 
+    public String getMimeType() {
+        return mimeType;
+    }
+
     public static class SaveFileRequestBuilder extends BaseSaveRequestBuilder<SaveFileRequest> {
 
         private MultipartFile file;
         private long size;
         private String fileExtension;
+        private String mimeType;
 
         public SaveFileRequestBuilder() {
         }
@@ -54,6 +69,11 @@ public class SaveFileRequest extends BaseSaveRequest {
             return SaveFileRequestBuilder.this;
         }
 
+        public SaveFileRequestBuilder mimeType(String mimeType){
+            this.mimeType = mimeType;
+            return SaveFileRequestBuilder.this;
+        }
+
         @Override
         public SaveFileRequest build() {
 
@@ -64,7 +84,8 @@ public class SaveFileRequest extends BaseSaveRequest {
                     size,
                     fileExtension,
                     shouldOverrideExistingFile,
-                    originalName);
+                    originalName,
+                    mimeType);
         }
     }
 }

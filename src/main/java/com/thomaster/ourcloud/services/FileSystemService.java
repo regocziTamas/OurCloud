@@ -45,13 +45,17 @@ public class FileSystemService {
 
             fileName = URLDecoder.decode(fileName, StandardCharsets.ISO_8859_1);
 
-            response.setContentType("application/x-msdownload");
-            response.setHeader("Content-disposition", "attachment; filename=" + fileName);
+            response.setContentType(fileToDownload.getMimeType());
+            response.setHeader("Content-Disposition", "attachment; filename=valami.txt");
 
         } catch (FileNotFoundException e) {
             System.out.println("File not found!");
         } catch (IOException e) {
             System.out.println("Some IO exception happened!");
         }
+    }
+
+    public File readFile(UploadedFile fileToDownload) {
+        return new File(STORAGE_PATH + "/" + fileToDownload.getFilenameOnDisk());
     }
 }

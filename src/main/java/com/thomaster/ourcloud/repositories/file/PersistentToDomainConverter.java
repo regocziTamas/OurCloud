@@ -25,8 +25,10 @@ public class PersistentToDomainConverter {
         fse.setRelativePath(persistentFSE.getRelativePath());
         fse.setFileSize(persistentFSE.getFileSize());
 
-        if (fse instanceof UploadedFile)
+        if (fse instanceof UploadedFile) {
             ((UploadedFile) fse).setFilenameOnDisk(((PersistentUploadedFile) persistentFSE).getFilenameOnDisk());
+            ((UploadedFile) fse).setMimeType(((PersistentUploadedFile) persistentFSE).getMimeType());
+        }
 
         return fse;
     }
@@ -42,10 +44,14 @@ public class PersistentToDomainConverter {
         fseInfo.setRelativePath(persistentFSE.getRelativePath());
         fseInfo.setSize(persistentFSE.getFileSize());
 
-        if(persistentFSE instanceof PersistentUploadedFile)
+        if(persistentFSE instanceof PersistentUploadedFile) {
             fseInfo.setFolder(false);
-        else if(persistentFSE instanceof PersistentUploadedFolder)
+            fseInfo.setMimeType(((PersistentUploadedFile) persistentFSE).getMimeType());
+        }
+        else if(persistentFSE instanceof PersistentUploadedFolder) {
             fseInfo.setFolder(true);
+            fseInfo.setMimeType("");
+        }
         else
             throw new IllegalArgumentException("Unknown class");
 
@@ -70,8 +76,10 @@ public class PersistentToDomainConverter {
         fse.setRelativePath(domainFSE.getRelativePath());
         fse.setFileSize(domainFSE.getFileSize());
 
-        if(fse instanceof PersistentUploadedFile)
+        if(fse instanceof PersistentUploadedFile) {
             ((PersistentUploadedFile) fse).setFilenameOnDisk(((UploadedFile) domainFSE).getFilenameOnDisk());
+            ((PersistentUploadedFile) fse).setMimeType(((UploadedFile) domainFSE).getMimeType());
+        }
 
         return fse;
     }

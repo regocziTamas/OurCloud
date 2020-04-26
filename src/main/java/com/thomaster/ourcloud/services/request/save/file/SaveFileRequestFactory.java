@@ -18,7 +18,10 @@ public class SaveFileRequestFactory extends BaseRequestFactory<SaveFileRequest> 
         super(userService, fileService);
     }
 
-    public SaveFileRequest createSaveFileRequest(String parentFolderPath, MultipartFile file, boolean shouldOverrideExistingFile) {
+    public SaveFileRequest createSaveFileRequest(String parentFolderPath,
+                                                 MultipartFile file,
+                                                 boolean shouldOverrideExistingFile,
+                                                 String mimeType) {
         OCUser initiatingUser = userService.getCurrentlyLoggedInUser().orElse(null);
         UploadedFolder parentFolder = validatePathThenQueryAndCastToFolder(parentFolderPath);
         OCUser parentFolderOwner = parentFolder.getOwner();
@@ -27,6 +30,7 @@ public class SaveFileRequestFactory extends BaseRequestFactory<SaveFileRequest> 
                 .file(file)
                 .size(file.getSize())
                 .fileExtension(Files.getFileExtension(file.getOriginalFilename()))
+                .mimeType(mimeType)
                 .originalName(file.getOriginalFilename())
                 .shouldOverrideExistingFile(shouldOverrideExistingFile)
                 .parentFolder(parentFolder)

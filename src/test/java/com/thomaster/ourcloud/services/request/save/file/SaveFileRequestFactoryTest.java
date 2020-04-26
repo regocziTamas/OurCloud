@@ -58,7 +58,7 @@ class SaveFileRequestFactoryTest {
 
         MockMultipartFile file = new MockMultipartFile("TESTFILE", "file.txt","txt", new byte[10]);
 
-        SaveFileRequest saveFileRequest = requestFactory.createSaveFileRequest("Thomaster", file, true);
+        SaveFileRequest saveFileRequest = requestFactory.createSaveFileRequest("Thomaster", file, true, "text/plain");
 
         ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
 
@@ -72,6 +72,7 @@ class SaveFileRequestFactoryTest {
         assertThat(saveFileRequest.isShouldOverrideExistingFile()).isEqualTo(true);
         assertThat(saveFileRequest.getParentFolder()).isEqualTo(folder);
         assertThat(saveFileRequest.getParentFolderOwner()).isEqualTo(ocUser);
+        assertThat(saveFileRequest.getMimeType()).isEqualTo("text/plain");
         assertThat(saveFileRequest.getInitiatingUser().get()).isEqualTo(ocUser);
     }
 
@@ -94,7 +95,7 @@ class SaveFileRequestFactoryTest {
 
         MockMultipartFile file = new MockMultipartFile("TESTFILE", "file.txt","txt", new byte[10]);
 
-        SaveFileRequest saveFileRequest = requestFactory.createSaveFileRequest("Thomaster", file, true);
+        SaveFileRequest saveFileRequest = requestFactory.createSaveFileRequest("Thomaster", file, true, "text/plain");
 
         ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
 
@@ -123,7 +124,7 @@ class SaveFileRequestFactoryTest {
 
         MockMultipartFile file = new MockMultipartFile("TESTFILE", "file.txt","txt", new byte[10]);
 
-        RequestValidationException requestValidationException = catchThrowableOfType(() -> requestFactory.createSaveFileRequest("Thomaster", file, true), RequestValidationException.class);
+        RequestValidationException requestValidationException = catchThrowableOfType(() -> requestFactory.createSaveFileRequest("Thomaster", file, true, "text/plain"), RequestValidationException.class);
         assertThat(requestValidationException.getErrorCode()).isEqualTo(RequestValidationException.NO_FSE_FOUND_CODE);
 
         ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
@@ -153,7 +154,7 @@ class SaveFileRequestFactoryTest {
 
         MockMultipartFile file = new MockMultipartFile("TESTFILE", "file.txt","txt", new byte[10]);
 
-        RequestValidationException requestValidationException = catchThrowableOfType(() -> requestFactory.createSaveFileRequest("Thomaster.file_that_is_not_folder_txt", file, true), RequestValidationException.class);
+        RequestValidationException requestValidationException = catchThrowableOfType(() -> requestFactory.createSaveFileRequest("Thomaster.file_that_is_not_folder_txt", file, true, "text/plain"), RequestValidationException.class);
         assertThat(requestValidationException.getErrorCode()).isEqualTo(RequestValidationException.NO_FSE_FOUND_CODE);
 
         ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
