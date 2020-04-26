@@ -6,7 +6,7 @@ import com.thomaster.ourcloud.model.user.OCUser;
 import com.thomaster.ourcloud.services.FileService;
 import com.thomaster.ourcloud.services.OCUserService;
 import com.thomaster.ourcloud.services.request.RequestValidationException;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -34,7 +34,7 @@ class SaveFileRequestFactoryTest {
     @InjectMocks
     private SaveFileRequestFactory requestFactory = new SaveFileRequestFactory(userService, fileService);
 
-    @Before
+    @BeforeEach
     public void init() {
         MockitoAnnotations.initMocks(this);
     }
