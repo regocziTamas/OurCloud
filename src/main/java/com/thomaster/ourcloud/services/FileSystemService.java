@@ -1,6 +1,8 @@
 package com.thomaster.ourcloud.services;
 
 import com.thomaster.ourcloud.model.filesystem.UploadedFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,6 +20,8 @@ public class FileSystemService {
 
     FilePathService filePathService;
     private static final String STORAGE_PATH = System.getenv("STORAGE_PATH");
+
+    private static final Logger logger = LoggerFactory.getLogger(FileSystemService.class);
 
     public FileSystemService(FilePathService filePathService) {
         this.filePathService = filePathService;
@@ -38,7 +42,11 @@ public class FileSystemService {
     public void addDownloadFileToResponse(UploadedFile fileToDownload, HttpServletResponse response) {
 
         try {
-            FileInputStream inputStream = new FileInputStream(STORAGE_PATH + "/" + fileToDownload.getFilenameOnDisk());
+            String absFilePath = STORAGE_PATH + "/" + fileToDownload.getFilenameOnDisk();
+
+            logger.debug("Looking for file with path: " + absFilePath);
+
+            FileInputStream inputStream = new FileInputStream(absFilePath);
             response.getOutputStream().write(inputStream.readAllBytes());
 
             String fileName = URLEncoder.encode(fileToDownload.getOriginalName(), StandardCharsets.UTF_8);
@@ -49,7 +57,8 @@ public class FileSystemService {
             response.setHeader("Content-Disposition", "attachment; filename=valami.txt");
 
         } catch (FileNotFoundException e) {
-            System.out.println("File not found!");
+            logger.error("File not found!");
+            e.printStackTrace();
         } catch (IOException e) {
             System.out.println("Some IO exception happened!");
         }
