@@ -22,6 +22,8 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletResponse;
 import java.io.FileNotFoundException;
 
+import static com.thomaster.ourcloud.Constants.API_ENDPOINT_PREFIX;
+
 @RestController
 public class FileController {
 
@@ -46,20 +48,20 @@ public class FileController {
         this.fileTypeService = fileTypeService;
     }
 
-    @GetMapping("/files")
+    @GetMapping(API_ENDPOINT_PREFIX +"/files")
     public String fileController()
     {
         return "{\"msg\": \"Msg from backend\"}";
     }
 
-    @GetMapping("/file")
+    @GetMapping(API_ENDPOINT_PREFIX +"/file")
     public FileSystemElementJSON getFile(@RequestParam("fileToPathToGet") String fileToPathToGet) {
         FileSystemElement fileSystemElement = fileService.findFSElementWithContainedFilesByPath(fileToPathToGet.replace("/", "."));
 
         return FileSystemElementJSON.of(fileSystemElement);
     }
 
-    @PostMapping("/upload/file")
+    @PostMapping(API_ENDPOINT_PREFIX +"/upload/file")
     public String uploadFile(@RequestParam("file") MultipartFile file,
                              @RequestParam("parentFolderPath") String parentFolderPath,
                              @RequestParam("shouldOverrideExistingFile") boolean shouldOverrideExistingFile) {
@@ -71,7 +73,7 @@ public class FileController {
         return "{\"result\": \"OK\"}";
     }
 
-    @PostMapping("/upload/folder")
+    @PostMapping(API_ENDPOINT_PREFIX +"/upload/folder")
     public String uploadFolder(@RequestParam("parentFolderPath") String parentFolderPath,
                              @RequestParam("newFolderName") String newFolderName,
                              @RequestParam("shouldOverrideExistingFile") boolean shouldOverrideExistingFile) {
@@ -80,23 +82,17 @@ public class FileController {
         return "{\"result\": \"OK\"}";
     }
 
-    @DeleteMapping("/delete/fse")
+    @DeleteMapping(API_ENDPOINT_PREFIX +"/delete/fse")
     public String deleteFile(@RequestParam("fileToPathToDelete") String fileToPathToDelete) {
         DeleteRequest deleteRequest = deleteRequestFactory.createDeleteRequest(fileToPathToDelete);
         fileService.deleteFSElementRecursively(deleteRequest);
         return "{\"result\": \"OK\"}";
     }
 
-    @GetMapping(value= "/download")
+    @GetMapping(value= API_ENDPOINT_PREFIX +"/download")
     public void downloadFile(@RequestParam("pathToFileToDownload") String pathToFileToDownload, HttpServletResponse response) throws FileNotFoundException {
         UploadedFile fileToDownload = (UploadedFile) fileService.queryFileToDownload(pathToFileToDownload);
         fileSystemService.addDownloadFileToResponse(fileToDownload, response);
-
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.add("Content-Type", "application/x-bittorrent");
-//        //headers.add("Content-Disposition", "attachment; filename=" + fileToDownload.getOriginalName());
-//
-//        return new ResponseEntity<String>("kabbe", headers, HttpStatus.OK);
     }
 
 }
