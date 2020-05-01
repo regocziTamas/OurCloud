@@ -18,10 +18,13 @@ import org.springframework.util.StringUtils;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
 public class FileService {
+
+    private static final Pattern PATH_FRIENDLY_FILENAME = Pattern.compile("[A-Za-z0-9|_]");
 
     FilePathService filePathService;
     FileRepository fileRepository;
@@ -94,7 +97,7 @@ public class FileService {
     private String makeNamePathFriendly(String originalName){
         return Arrays.stream(originalName.split(""))
                 .map(character -> {
-                    if (character.matches("[A-Za-z0-9|_]"))
+                    if (PATH_FRIENDLY_FILENAME.matcher(character).matches())
                         return character;
                     return "_";
                 })

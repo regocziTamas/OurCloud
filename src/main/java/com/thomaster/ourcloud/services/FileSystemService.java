@@ -17,7 +17,7 @@ import java.util.Comparator;
 public class FileSystemService {
 
     FilePathService filePathService;
-    private static final String STORAGE_PATH = "/home/thomaster/ourcloud_userfiles";
+    private static final String STORAGE_PATH = System.getenv("STORAGE_PATH");
 
     public FileSystemService(FilePathService filePathService) {
         this.filePathService = filePathService;
