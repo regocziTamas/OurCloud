@@ -6,17 +6,21 @@ import com.thomaster.ourcloud.model.filesystem.UploadedFile;
 import com.thomaster.ourcloud.services.FileService;
 import com.thomaster.ourcloud.services.FileSystemService;
 import com.thomaster.ourcloud.services.FileTypeService;
+import com.thomaster.ourcloud.services.request.RequestValidationException;
 import com.thomaster.ourcloud.services.request.delete.DeleteRequest;
 import com.thomaster.ourcloud.services.request.delete.DeleteRequestFactory;
 import com.thomaster.ourcloud.services.request.save.file.SaveFileRequest;
 import com.thomaster.ourcloud.services.request.save.file.SaveFileRequestFactory;
 import com.thomaster.ourcloud.services.request.save.folder.SaveFolderRequest;
 import com.thomaster.ourcloud.services.request.save.folder.SaveFolderRequestFactory;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
@@ -55,44 +59,72 @@ public class FileController {
     }
 
     @GetMapping(API_ENDPOINT_PREFIX +"/file")
-    public FileSystemElementJSON getFile(@RequestParam("fileToPathToGet") String fileToPathToGet) {
+    public ResponseEntity<FileSystemElementJSON> getFile(@RequestParam("fileToPathToGet") String fileToPathToGet) {
         FileSystemElement fileSystemElement = fileService.findFSElementWithContainedFilesByPath(fileToPathToGet.replace("/", "."));
 
-        return FileSystemElementJSON.of(fileSystemElement);
+        return ResponseEntity.ok()
+                .body(FileSystemElementJSON.of(fileSystemElement));
+
+
+//        return FileSystemElementJSON.of(fileSystemElement);
     }
 
     @PostMapping(API_ENDPOINT_PREFIX +"/upload/file")
-    public String uploadFile(@RequestParam("file") MultipartFile file,
+    public ResponseEntity<Object> uploadFile(@RequestParam("file") MultipartFile file,
                              @RequestParam("parentFolderPath") String parentFolderPath,
                              @RequestParam("shouldOverrideExistingFile") boolean shouldOverrideExistingFile) {
-        System.out.println("AAAAAAAAAAAAAAAAAa:" + file.getContentType());
+
         String mimeType = fileTypeService.determineMIMEtype(file);
 
         SaveFileRequest saveFileRequest = saveFileRequestFactory.createSaveFileRequest(parentFolderPath, file, shouldOverrideExistingFile, mimeType);
+
         fileService.saveFile(saveFileRequest);
-        return "{\"result\": \"OK\"}";
+
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping(API_ENDPOINT_PREFIX +"/upload/folder")
-    public String uploadFolder(@RequestParam("parentFolderPath") String parentFolderPath,
+    public ResponseEntity<Object> uploadFolder(@RequestParam("parentFolderPath") String parentFolderPath,
                              @RequestParam("newFolderName") String newFolderName,
                              @RequestParam("shouldOverrideExistingFile") boolean shouldOverrideExistingFile) {
+
         SaveFolderRequest saveFolderRequest = saveFolderRequestFactory.createSaveFolderRequest(parentFolderPath, newFolderName, shouldOverrideExistingFile);
+
         fileService.saveFolder(saveFolderRequest);
-        return "{\"result\": \"OK\"}";
+
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping(API_ENDPOINT_PREFIX +"/delete/fse")
-    public String deleteFile(@RequestParam("fileToPathToDelete") String fileToPathToDelete) {
+    public ResponseEntity<Object> deleteFile(@RequestParam("fileToPathToDelete") String fileToPathToDelete) {
+
         DeleteRequest deleteRequest = deleteRequestFactory.createDeleteRequest(fileToPathToDelete);
+
         fileService.deleteFSElementRecursively(deleteRequest);
-        return "{\"result\": \"OK\"}";
+
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping(value= API_ENDPOINT_PREFIX +"/download")
-    public void downloadFile(@RequestParam("pathToFileToDownload") String pathToFileToDownload, HttpServletResponse response) throws FileNotFoundException {
+    public ResponseEntity<Resource> downloadFile(@RequestParam("pathToFileToDownload") String pathToFileToDownload) {
+
         UploadedFile fileToDownload = (UploadedFile) fileService.queryFileToDownload(pathToFileToDownload);
-        fileSystemService.addDownloadFileToResponse(fileToDownload, response);
+        InputStreamResource inputStream = fileSystemService.getFileAsInputStream(fileToDownload);
+
+        return ResponseEntity.ok()
+                .contentLength(fileToDownload.getFileSize())
+                .contentType(MediaType.parseMediaType(fileToDownload.getMimeType()))
+                .header("Content-Disposition", "attachment; filename=" + fileToDownload.getOriginalName())
+                .body(inputStream);
+    }
+
+    @ExceptionHandler({RequestValidationException.class})
+    public ResponseEntity<String> handleFileControllerException(Exception ex, WebRequest request) {
+        RequestValidationException reqValException = (RequestValidationException) ex;
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(reqValException.getErrorMsg());
     }
 
 }
