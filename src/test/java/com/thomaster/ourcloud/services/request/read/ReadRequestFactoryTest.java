@@ -50,7 +50,7 @@ class ReadRequestFactoryTest {
 
         when(userService.getCurrentlyLoggedInUser()).thenReturn(Optional.of(ocUser));
 
-        ReadRequest readRequest = requestFactory.createReadRequest(folder);
+        ReadRequest readRequest = requestFactory.createReadRequest(folder, "Thomaster");
 
         verify(userService, times(1)).getCurrentlyLoggedInUser();
 
@@ -75,7 +75,7 @@ class ReadRequestFactoryTest {
 
         when(userService.getCurrentlyLoggedInUser()).thenReturn(Optional.empty());
 
-        ReadRequest readRequest = requestFactory.createReadRequest(folder);
+        ReadRequest readRequest = requestFactory.createReadRequest(folder, "Thomaster");
 
         verify(userService, times(1)).getCurrentlyLoggedInUser();
 

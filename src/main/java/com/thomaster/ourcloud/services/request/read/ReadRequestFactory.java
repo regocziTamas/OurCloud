@@ -6,7 +6,6 @@ import com.thomaster.ourcloud.services.FileService;
 import com.thomaster.ourcloud.services.OCUserService;
 import com.thomaster.ourcloud.services.request.RequestValidationException;
 import com.thomaster.ourcloud.services.request.base.BaseRequestFactory;
-import com.thomaster.ourcloud.services.request.delete.DeleteRequest;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -16,7 +15,10 @@ public class ReadRequestFactory extends BaseRequestFactory<ReadRequest> {
         super(userService, fileService);
     }
 
-    public ReadRequest createReadRequest(FileSystemElement fileSystemElement) {
+    public ReadRequest createReadRequest(FileSystemElement fileSystemElement, String requestedPath) {
+
+        if (fileSystemElement == null)
+            throw RequestValidationException.noFileSystemElementFound(requestedPath, "File System Element");
 
         OCUser initiatingUser = userService.getCurrentlyLoggedInUser().orElse(null);
 

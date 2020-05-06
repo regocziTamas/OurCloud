@@ -18,7 +18,8 @@ import com.thomaster.ourcloud.services.request.save.file.SaveFileRequestValidato
 import com.thomaster.ourcloud.services.request.save.folder.SaveFolderRequest;
 import com.thomaster.ourcloud.services.request.save.folder.SaveFolderRequestValidator;
 import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.annotation.AfterReturning;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.reflect.MethodSignature;
@@ -57,13 +58,13 @@ public class RequestValidatorAspect {
     }
 
     //@AfterReturning(value = "execution(* com.thomaster.ourcloud.services.FileService.findFSElementWithFullTreeByPath(..))", returning = "fileSystemElement")
-    public void validateReadRequest(FileSystemElement fileSystemElement) {
-        ReadRequest readRequest = readRequestFactory.createReadRequest(fileSystemElement);
+    public void validateReadRequest(FileSystemElement fileSystemElement, String requestedPath) {
+        ReadRequest readRequest = readRequestFactory.createReadRequest(fileSystemElement, requestedPath);
         readRequestValidator.validateRequest(readRequest);
     }
 
-    public void validateDownloadFileRequest(FileSystemElement fileSystemElement) {
-        ReadRequest downloadFileRequest = readRequestFactory.createReadRequest(fileSystemElement);
+    public void validateDownloadFileRequest(FileSystemElement fileSystemElement, String requestedPath) {
+        ReadRequest downloadFileRequest = readRequestFactory.createReadRequest(fileSystemElement, requestedPath);
         downloadRequestValidator.validateRequest(downloadFileRequest);
     }
 
@@ -102,19 +103,26 @@ public class RequestValidatorAspect {
         }
     }
 
-    @AfterReturning(value = "@annotation(com.thomaster.ourcloud.services.request.marker.PostQueryRequestValidation)", returning = "fileSystemElement")
-    public void postQueryRequestValidationHandler(JoinPoint joinPoint, FileSystemElement fileSystemElement) {
-        PostQueryRequestValidationType value = extractAnnotation(PostQueryRequestValidation.class, joinPoint).value();
+    @Around(value = "@annotation(com.thomaster.ourcloud.services.request.marker.PostQueryRequestValidation)")
+    public FileSystemElement postQueryRequestValidationHandler(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
+
+        String filePath = (String) proceedingJoinPoint.getArgs()[0];
+
+        FileSystemElement fileSystemElement = (FileSystemElement) proceedingJoinPoint.proceed();
+
+        PostQueryRequestValidationType value = extractAnnotation(PostQueryRequestValidation.class, proceedingJoinPoint).value();
 
         switch (value) {
             case READ:
-                validateReadRequest(fileSystemElement);
+                validateReadRequest(fileSystemElement, filePath);
                 break;
             case DOWNLOAD:
-                validateDownloadFileRequest(fileSystemElement);
+                validateDownloadFileRequest(fileSystemElement, filePath);
                 break;
             default: throw new UnsupportedOperationException("Unknown PostQueryRequestValidationType");
         }
+
+        return fileSystemElement;
     }
 
     private static <T extends Annotation> T extractAnnotation(Class<T> annotationClass, JoinPoint joinPoint)

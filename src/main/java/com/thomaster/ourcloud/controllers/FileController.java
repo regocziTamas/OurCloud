@@ -13,6 +13,7 @@ import com.thomaster.ourcloud.services.request.save.file.SaveFileRequest;
 import com.thomaster.ourcloud.services.request.save.file.SaveFileRequestFactory;
 import com.thomaster.ourcloud.services.request.save.folder.SaveFolderRequest;
 import com.thomaster.ourcloud.services.request.save.folder.SaveFolderRequestFactory;
+import org.apache.tomcat.util.http.fileupload.impl.SizeLimitExceededException;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -25,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.FileNotFoundException;
+import java.text.MessageFormat;
 
 import static com.thomaster.ourcloud.Constants.API_ENDPOINT_PREFIX;
 
@@ -52,27 +54,18 @@ public class FileController {
         this.fileTypeService = fileTypeService;
     }
 
-    @GetMapping(API_ENDPOINT_PREFIX +"/files")
-    public String fileController()
-    {
-        return "{\"msg\": \"Msg from backend\"}";
-    }
-
     @GetMapping(API_ENDPOINT_PREFIX +"/file")
     public ResponseEntity<FileSystemElementJSON> getFile(@RequestParam("fileToPathToGet") String fileToPathToGet) {
         FileSystemElement fileSystemElement = fileService.findFSElementWithContainedFilesByPath(fileToPathToGet.replace("/", "."));
 
         return ResponseEntity.ok()
                 .body(FileSystemElementJSON.of(fileSystemElement));
-
-
-//        return FileSystemElementJSON.of(fileSystemElement);
     }
 
     @PostMapping(API_ENDPOINT_PREFIX +"/upload/file")
     public ResponseEntity<Object> uploadFile(@RequestParam("file") MultipartFile file,
                              @RequestParam("parentFolderPath") String parentFolderPath,
-                             @RequestParam("shouldOverrideExistingFile") boolean shouldOverrideExistingFile) {
+                             @RequestParam("shouldOverrideExistingFile") boolean shouldOverrideExistingFile) throws SizeLimitExceededException {
 
         String mimeType = fileTypeService.determineMIMEtype(file);
 
@@ -107,7 +100,6 @@ public class FileController {
 
     @GetMapping(value= API_ENDPOINT_PREFIX +"/download")
     public ResponseEntity<Resource> downloadFile(@RequestParam("pathToFileToDownload") String pathToFileToDownload) {
-
         UploadedFile fileToDownload = (UploadedFile) fileService.queryFileToDownload(pathToFileToDownload);
         InputStreamResource inputStream = fileSystemService.getFileAsInputStream(fileToDownload);
 
@@ -119,12 +111,24 @@ public class FileController {
     }
 
     @ExceptionHandler({RequestValidationException.class})
-    public ResponseEntity<String> handleFileControllerException(Exception ex, WebRequest request) {
+    public ResponseEntity<String> handleFileControllerException(Exception ex) {
         RequestValidationException reqValException = (RequestValidationException) ex;
+
+        System.out.println("Caught exception: " + reqValException.getErrorCode() + " " + reqValException.getErrorMsg());
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
+                .header("errorCode", reqValException.getErrorCode())
                 .body(reqValException.getErrorMsg());
     }
+
+    /*@ExceptionHandler({SizeLimitExceededException.class})
+    public ResponseEntity<String> handleSizeLimitExceededException(Exception ex) {
+        SizeLimitExceededException exception = (SizeLimitExceededException) ex;
+        System.out.println("BAZDMEEEEEEEEEEEEEEEEEEEEEEG");
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(exception.getMessage());
+    }*/
 
 }
