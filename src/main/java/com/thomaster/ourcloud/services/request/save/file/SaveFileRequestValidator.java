@@ -35,6 +35,6 @@ public class SaveFileRequestValidator extends BaseWriteRequestValidator<SaveFile
                 .anyMatch(file -> file.getOriginalName().equals(saveFileRequest.getOriginalName()));
 
         if(nameCollidesWithExistingFile && !saveFileRequest.isShouldOverrideExistingFile())
-            throw RequestValidationException.fileNameNotUnique(saveFileRequest.getOriginalName(), saveFileRequest.getParentFolder().getRelativePath());
+            throw RequestValidationException.fileNameNotUnique(saveFileRequest.getOriginalName(), saveFileRequest.getParentFolder().getOriginalName());
     }
 }

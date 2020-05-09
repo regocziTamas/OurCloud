@@ -23,6 +23,6 @@ public class SaveFolderRequestValidator extends BaseWriteRequestValidator<SaveFo
         if(newNameCollidesWithExistingFolder)
             throw RequestValidationException.folderNameNotUnique(
                     saveFolderRequest.getOriginalName(),
-                    saveFolderRequest.getParentFolder().getRelativePath());
+                    saveFolderRequest.getParentFolder().getOriginalName());
     }
 }
