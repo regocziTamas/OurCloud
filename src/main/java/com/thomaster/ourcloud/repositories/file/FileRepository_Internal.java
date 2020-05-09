@@ -22,8 +22,8 @@ interface FileRepository_Internal extends JpaRepository<PersistentFileSystemElem
 
     @Transactional
     @Modifying
-    @Query(value = "DELETE FROM persistent_file_system_element WHERE relative_path ~ lquery(:pathToDelete)", nativeQuery = true)
-    void deleteRecursivelyByPath(@Param("pathToDelete") String pathToDelete);
+    @Query(value = "DELETE FROM persistent_file_system_element WHERE relative_path ~ lquery(:pathToDelete) RETURNING filename_on_disk", nativeQuery = true)
+    Set<String> deleteRecursivelyByPath(@Param("pathToDelete") String pathToDelete);
 
     @Transactional
     @Modifying

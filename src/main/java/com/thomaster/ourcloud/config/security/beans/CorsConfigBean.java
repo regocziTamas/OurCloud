@@ -11,14 +11,22 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 @Component
 public class CorsConfigBean {
 
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
+
+        String frontendAddress = System.getenv("FRONTEND_ADDRESS");
+
+        if(frontendAddress == null)
+            throw new IllegalArgumentException("FRONTEND_ADDRESS environment variable is not set!");
+
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("*"));
+        //configuration.setAllowedOrigins(Arrays.asList("*"));
+        configuration.setAllowedOrigins(Collections.singletonList(frontendAddress));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "x-auth-token", "Content-Disposition"));
         configuration.addExposedHeader("Content-Type");

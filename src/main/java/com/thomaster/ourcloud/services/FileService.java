@@ -17,6 +17,7 @@ import org.springframework.util.StringUtils;
 
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -26,16 +27,13 @@ public class FileService {
 
     private static final Pattern PATH_FRIENDLY_FILENAME = Pattern.compile("[A-Za-z0-9|_]");
 
-    FilePathService filePathService;
     FileRepository fileRepository;
     OCUserService userService;
     FileSystemService fileSystemService;
 
-    public FileService(FilePathService filePathService,
-                       FileRepository fileRepository,
+    public FileService(FileRepository fileRepository,
                        OCUserService userService,
                        FileSystemService fileSystemService) {
-        this.filePathService = filePathService;
         this.fileRepository = fileRepository;
         this.userService = userService;
         this.fileSystemService = fileSystemService;
@@ -59,7 +57,8 @@ public class FileService {
 
     @PreQueryRequestValidation(PreQueryRequestValidationType.DELETE)
     public void deleteFSElementRecursively(DeleteRequest deleteRequest) {
-        fileRepository.deleteRecursivelyByPath(deleteRequest.getFileToDelete().getRelativePath());
+        Set<String> filenamesToDeleteOnDisk = fileRepository.deleteRecursivelyByPath(deleteRequest.getFileToDelete().getRelativePath());
+
         fileRepository.updateFileSizeAllAncestorFolders(deleteRequest.getParentFolder().getRelativePath(), deleteRequest.getFileToDelete().getFileSize() * -1);
     }
 

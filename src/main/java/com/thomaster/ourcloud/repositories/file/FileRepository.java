@@ -4,7 +4,9 @@ import com.thomaster.ourcloud.model.filesystem.FileSystemElement;
 import com.thomaster.ourcloud.model.filesystem.UploadedFile;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class FileRepository {
@@ -43,10 +45,13 @@ public class FileRepository {
 
     }
 
-    public void deleteRecursivelyByPath(String pathToDelete) {
+    public Set<String> deleteRecursivelyByPath(String pathToDelete) {
         String deleteQueryParam = pathToDelete + QUERY_POSTFIX_SEARCH_ALL_LEVELS_RECURSIVELY;
 
-        fileRepository.deleteRecursivelyByPath(deleteQueryParam);
+        return fileRepository.deleteRecursivelyByPath(deleteQueryParam)
+                .stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
     };
 
     public void updateFileSizeAllAncestorFolders(String pathToUpdate, Long fileSizeDelta) {

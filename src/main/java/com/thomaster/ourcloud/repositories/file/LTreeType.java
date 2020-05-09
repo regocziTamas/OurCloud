@@ -66,7 +66,6 @@ public class LTreeType implements UserType {
     @Override
     public Object replace(Object original, Object target, Object owner)
             throws HibernateException {
-        // TODO Auto-generated method stub
         return deepCopy(original);
     }
 }

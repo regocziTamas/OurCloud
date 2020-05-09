@@ -13,20 +13,14 @@ import java.io.*;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Set;
 
 @Service
 public class FileSystemService {
 
-    FilePathService filePathService;
     private static final String STORAGE_PATH = System.getenv("STORAGE_PATH");
-
-    private static final Logger logger = LoggerFactory.getLogger(FileSystemService.class);
-
-    public FileSystemService(FilePathService filePathService) {
-        this.filePathService = filePathService;
-    }
-
-
 
     public void writeFile(MultipartFile fileToSave, String filenameOnDisk) {
 
@@ -38,30 +32,6 @@ public class FileSystemService {
         }
     }
 
-    public void addDownloadFileToResponse(UploadedFile fileToDownload, HttpServletResponse response) {
-
-        try {
-            String absFilePath = STORAGE_PATH + "/" + fileToDownload.getFilenameOnDisk();
-
-            logger.debug("Looking for file with path: " + absFilePath);
-
-            FileInputStream inputStream = new FileInputStream(absFilePath);
-            response.getOutputStream().write(inputStream.readAllBytes());
-
-            String fileName = URLEncoder.encode(fileToDownload.getOriginalName(), StandardCharsets.UTF_8);
-
-            fileName = URLDecoder.decode(fileName, StandardCharsets.ISO_8859_1);
-
-            response.setContentType(fileToDownload.getMimeType());
-            response.setHeader("Content-Disposition", "attachment; filename=valami.txt");
-
-        } catch (FileNotFoundException e) {
-            logger.error("File not found!");
-            e.printStackTrace();
-        } catch (IOException e) {
-            System.out.println("Some IO exception happened!");
-        }
-    }
 
     public InputStreamResource getFileAsInputStream(UploadedFile fileToDownload) {
         String absFilePath = STORAGE_PATH + "/" + fileToDownload.getFilenameOnDisk();
@@ -69,13 +39,22 @@ public class FileSystemService {
         try {
             return new InputStreamResource(new FileInputStream(absFilePath));
         } catch (FileNotFoundException e) {
-            logger.error("File not found!");
             e.printStackTrace();
             throw RequestValidationException.noFileSystemElementFound(fileToDownload.getRelativePath(), "File");
         }
     }
 
-    public File readFile(UploadedFile fileToDownload) {
-        return new File(STORAGE_PATH + "/" + fileToDownload.getFilenameOnDisk());
+
+    public void deleteFilesOnDisk(Set<String> filenames) {
+        filenames.stream()
+                .map(filename -> STORAGE_PATH + "/" + filename)
+                .forEach(filename -> {
+                    try {
+                        Files.delete(Path.of(filename));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
     }
+
 }
