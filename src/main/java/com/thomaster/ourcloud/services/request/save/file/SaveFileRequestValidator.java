@@ -24,7 +24,7 @@ public class SaveFileRequestValidator extends BaseWriteRequestValidator<SaveFile
     }
 
     private void callerHasEnoughStorageLeft(SaveFileRequest saveFolderRequest) {
-        if(saveFolderRequest.getSize() + saveFolderRequest.getParentFolderOwner().getUsedBytes() > 5000000000000000000L)
+        if(saveFolderRequest.getSize() + saveFolderRequest.getParentFolderOwner().getUsedBytes() > 500000000L)
             throw RequestValidationException.storageLimitExceeded();
     }
 
