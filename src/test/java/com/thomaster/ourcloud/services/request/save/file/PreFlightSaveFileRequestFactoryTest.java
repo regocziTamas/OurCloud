@@ -23,7 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class SaveFileRequestFactoryTest {
+class PreFlightSaveFileRequestFactoryTest {
 
     @Mock
     private OCUserService userService;
@@ -32,7 +32,7 @@ class SaveFileRequestFactoryTest {
     private FileService fileService;
 
     @InjectMocks
-    private SaveFileRequestFactory requestFactory = new SaveFileRequestFactory(userService, fileService);
+    private PreFlightSaveFileRequestFactory requestFactory = new PreFlightSaveFileRequestFactory(userService, fileService);
 
     @BeforeEach
     public void init() {
@@ -58,7 +58,7 @@ class SaveFileRequestFactoryTest {
 
         MockMultipartFile file = new MockMultipartFile("TESTFILE", "file.txt","txt", new byte[10]);
 
-        SaveFileRequest saveFileRequest = requestFactory.createSaveFileRequest("Thomaster", file, true, "text/plain");
+        PreFlightSaveFileRequest preFlightSaveFileRequest = requestFactory.createPreFlightSaveFileRequest("Thomaster", "ABCD","file.txt" ,10, true);
 
         ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
 
@@ -66,14 +66,14 @@ class SaveFileRequestFactoryTest {
         verify(userService, times(1)).getCurrentlyLoggedInUser();
 
         assertThat(argumentCaptor.getValue()).isEqualTo("Thomaster");
-        assertThat(saveFileRequest.getSize()).isEqualTo(10);
-        assertThat(saveFileRequest.getFileExtension()).isEqualTo("txt");
-        assertThat(saveFileRequest.getOriginalName()).isEqualTo("file.txt");
-        assertThat(saveFileRequest.isShouldOverrideExistingFile()).isEqualTo(true);
-        assertThat(saveFileRequest.getParentFolder()).isEqualTo(folder);
-        assertThat(saveFileRequest.getParentFolderOwner()).isEqualTo(ocUser);
-        assertThat(saveFileRequest.getMimeType()).isEqualTo("text/plain");
-        assertThat(saveFileRequest.getInitiatingUser().get()).isEqualTo(ocUser);
+        assertThat(preFlightSaveFileRequest.getSize()).isEqualTo(10);
+        assertThat(preFlightSaveFileRequest.getFileExtension()).isEqualTo("txt");
+        assertThat(preFlightSaveFileRequest.getOriginalName()).isEqualTo("file.txt");
+        assertThat(preFlightSaveFileRequest.isShouldOverrideExistingFile()).isEqualTo(true);
+        assertThat(preFlightSaveFileRequest.getParentFolder()).isEqualTo(folder);
+        assertThat(preFlightSaveFileRequest.getParentFolderOwner()).isEqualTo(ocUser);
+        //assertThat(preFlightSaveFileRequest.getMimeType()).isEqualTo("text/plain");
+        assertThat(preFlightSaveFileRequest.getInitiatingUser().get()).isEqualTo(ocUser);
     }
 
     @Test
@@ -95,7 +95,7 @@ class SaveFileRequestFactoryTest {
 
         MockMultipartFile file = new MockMultipartFile("TESTFILE", "file.txt","txt", new byte[10]);
 
-        SaveFileRequest saveFileRequest = requestFactory.createSaveFileRequest("Thomaster", file, true, "text/plain");
+        PreFlightSaveFileRequest preFlightSaveFileRequest = requestFactory.createPreFlightSaveFileRequest("Thomaster", "ABCD","file.txt" ,10, true);
 
         ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
 
@@ -103,13 +103,13 @@ class SaveFileRequestFactoryTest {
         verify(userService, times(1)).getCurrentlyLoggedInUser();
 
         assertThat(argumentCaptor.getValue()).isEqualTo("Thomaster");
-        assertThat(saveFileRequest.getSize()).isEqualTo(10);
-        assertThat(saveFileRequest.getFileExtension()).isEqualTo("txt");
-        assertThat(saveFileRequest.getOriginalName()).isEqualTo("file.txt");
-        assertThat(saveFileRequest.isShouldOverrideExistingFile()).isEqualTo(true);
-        assertThat(saveFileRequest.getParentFolder()).isEqualTo(folder);
-        assertThat(saveFileRequest.getParentFolderOwner()).isEqualTo(ocUser);
-        assertThat(saveFileRequest.getInitiatingUser()).isEmpty();
+        assertThat(preFlightSaveFileRequest.getSize()).isEqualTo(10);
+        assertThat(preFlightSaveFileRequest.getFileExtension()).isEqualTo("txt");
+        assertThat(preFlightSaveFileRequest.getOriginalName()).isEqualTo("file.txt");
+        assertThat(preFlightSaveFileRequest.isShouldOverrideExistingFile()).isEqualTo(true);
+        assertThat(preFlightSaveFileRequest.getParentFolder()).isEqualTo(folder);
+        assertThat(preFlightSaveFileRequest.getParentFolderOwner()).isEqualTo(ocUser);
+        assertThat(preFlightSaveFileRequest.getInitiatingUser()).isEmpty();
     }
 
     @Test
@@ -124,7 +124,7 @@ class SaveFileRequestFactoryTest {
 
         MockMultipartFile file = new MockMultipartFile("TESTFILE", "file.txt","txt", new byte[10]);
 
-        RequestValidationException requestValidationException = catchThrowableOfType(() -> requestFactory.createSaveFileRequest("Thomaster", file, true, "text/plain"), RequestValidationException.class);
+        RequestValidationException requestValidationException = catchThrowableOfType(() -> requestFactory.createPreFlightSaveFileRequest("Thomaster", "ABCD","file.txt" ,10, true), RequestValidationException.class);
         assertThat(requestValidationException.getErrorCode()).isEqualTo(RequestValidationException.NO_FSE_FOUND_CODE);
 
         ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
@@ -154,7 +154,7 @@ class SaveFileRequestFactoryTest {
 
         MockMultipartFile file = new MockMultipartFile("TESTFILE", "file.txt","txt", new byte[10]);
 
-        RequestValidationException requestValidationException = catchThrowableOfType(() -> requestFactory.createSaveFileRequest("Thomaster.file_that_is_not_folder_txt", file, true, "text/plain"), RequestValidationException.class);
+        RequestValidationException requestValidationException = catchThrowableOfType(() -> requestFactory.createPreFlightSaveFileRequest("Thomaster.file_that_is_not_folder_txt", "ABCD", "file.txt", 10, true), RequestValidationException.class);
         assertThat(requestValidationException.getErrorCode()).isEqualTo(RequestValidationException.NO_FSE_FOUND_CODE);
 
         ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);

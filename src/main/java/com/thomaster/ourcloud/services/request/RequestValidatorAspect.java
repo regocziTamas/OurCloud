@@ -13,6 +13,8 @@ import com.thomaster.ourcloud.services.request.marker.PreQueryRequestValidationT
 import com.thomaster.ourcloud.services.request.read.ReadRequest;
 import com.thomaster.ourcloud.services.request.read.ReadRequestFactory;
 import com.thomaster.ourcloud.services.request.read.ReadRequestValidator;
+import com.thomaster.ourcloud.services.request.save.file.PreFlightSaveFileRequest;
+import com.thomaster.ourcloud.services.request.save.file.PreFlightSaveFileRequestValidator;
 import com.thomaster.ourcloud.services.request.save.file.SaveFileRequest;
 import com.thomaster.ourcloud.services.request.save.file.SaveFileRequestValidator;
 import com.thomaster.ourcloud.services.request.save.folder.SaveFolderRequest;
@@ -37,6 +39,7 @@ public class RequestValidatorAspect {
 
     private SaveFolderRequestValidator saveFolderRequestValidator;
 
+    private PreFlightSaveFileRequestValidator preFlightSaveFileRequestValidator;
     private SaveFileRequestValidator saveFileRequestValidator;
 
     private DeleteRequestValidator deleteRequestValidator;
@@ -46,12 +49,13 @@ public class RequestValidatorAspect {
     public RequestValidatorAspect(ReadRequestValidator readRequestValidator,
                                   ReadRequestFactory readRequestFactory,
                                   SaveFolderRequestValidator saveFolderRequestValidator,
-                                  SaveFileRequestValidator saveFileRequestValidator,
-                                  DeleteRequestValidator deleteRequestValidator,
+                                  PreFlightSaveFileRequestValidator preFlightSaveFileRequestValidator,
+                                  SaveFileRequestValidator saveFileRequestValidator, DeleteRequestValidator deleteRequestValidator,
                                   DownloadRequestValidator downloadRequestValidator) {
         this.readRequestValidator = readRequestValidator;
         this.readRequestFactory = readRequestFactory;
         this.saveFolderRequestValidator = saveFolderRequestValidator;
+        this.preFlightSaveFileRequestValidator = preFlightSaveFileRequestValidator;
         this.saveFileRequestValidator = saveFileRequestValidator;
         this.deleteRequestValidator = deleteRequestValidator;
         this.downloadRequestValidator = downloadRequestValidator;
@@ -75,6 +79,10 @@ public class RequestValidatorAspect {
     }
 
     //@Before("execution(* com.thomaster.ourcloud.services.FileService.saveFile(..)) && args(request,..)")
+    public void validatePreFlightSaveFileRequest(PreFlightSaveFileRequest request) {
+        preFlightSaveFileRequestValidator.validateRequest(request);
+    }
+
     public void validateSaveFileRequest(SaveFileRequest request) {
         saveFileRequestValidator.validateRequest(request);
     }
@@ -89,6 +97,9 @@ public class RequestValidatorAspect {
         PreQueryRequestValidationType value = extractAnnotation(PreQueryRequestValidation.class, joinPoint).value();
 
         switch (value) {
+            case PREFLIGHT_UPLOAD_FLIGHT:
+                validatePreFlightSaveFileRequest((PreFlightSaveFileRequest) request);
+                break;
             case UPLOAD_FILE:
                 validateSaveFileRequest((SaveFileRequest) request);
                 break;
