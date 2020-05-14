@@ -1,40 +1,32 @@
 package com.thomaster.ourcloud.services.request.save.file;
 
 import com.thomaster.ourcloud.services.request.RequestValidationException;
-import com.thomaster.ourcloud.services.request.base.BaseWriteRequestValidator;
+import com.thomaster.ourcloud.services.request.RequestValidator;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
-import java.util.List;
-
 @Service
-public class SaveFileRequestValidator extends BaseWriteRequestValidator<SaveFileRequest> {
+public class SaveFileRequestValidator extends RequestValidator<SaveFileRequest> {
+
 
     public SaveFileRequestValidator() {
-        validationElements.add(this::fileExtensionIsPermitted);
-        validationElements.add(this::callerHasEnoughStorageLeft);
-        validationElements.add(this::fileNameIsUniqueInFolder);
+        validationElements.add(this::validatePreFlightRequestExists);
+        validationElements.add(this::validateHash);
     }
 
-    private void fileExtensionIsPermitted(SaveFileRequest saveFileRequest) {
-        List<String> forbiddenExtensions = Arrays.asList("exe", "sh");
+    private void validatePreFlightRequestExists(SaveFileRequest saveFileRequest) {
 
-        if(forbiddenExtensions.contains(saveFileRequest.getFileExtension()))
-            throw RequestValidationException.forbiddenExtension(saveFileRequest.getFileExtension());
+        PreFlightSaveFileRequest preFlightSaveFileRequest = saveFileRequest.getPreFlightSaveFileRequest();
+
+        if(preFlightSaveFileRequest == null)
+            throw new RequestValidationException("ReqValExp10", "Invalid upload token!");
     }
 
-    private void callerHasEnoughStorageLeft(SaveFileRequest saveFolderRequest) {
-        if(saveFolderRequest.getSize() + saveFolderRequest.getParentFolderOwner().getUsedBytes() > 500000000L)
-            throw RequestValidationException.storageLimitExceeded();
-    }
+    private void validateHash(SaveFileRequest saveFileRequest) {
 
-    private void fileNameIsUniqueInFolder(SaveFileRequest saveFileRequest) {
-        boolean nameCollidesWithExistingFile = saveFileRequest.getParentFolder().getContainedFileInfos()
-                .stream()
-                .filter(fse ->  !fse.isFolder())
-                .anyMatch(file -> file.getOriginalName().equals(saveFileRequest.getOriginalName()));
+        String hashFromPreFlightRequest = saveFileRequest.getPreFlightSaveFileRequest().getHash();
+        String actualHashOfFile = saveFileRequest.getMd5Hash();
 
-        if(nameCollidesWithExistingFile && !saveFileRequest.isShouldOverrideExistingFile())
-            throw RequestValidationException.fileNameNotUnique(saveFileRequest.getOriginalName(), saveFileRequest.getParentFolder().getOriginalName());
+        if(!hashFromPreFlightRequest.equals(actualHashOfFile))
+            throw new RequestValidationException("ReqValExc09", "Hash from preflight request: " + hashFromPreFlightRequest + ", actual hash of file: " + actualHashOfFile);
     }
 }

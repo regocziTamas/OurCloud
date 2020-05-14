@@ -1,91 +1,88 @@
 package com.thomaster.ourcloud.services.request.save.file;
 
-import com.thomaster.ourcloud.model.filesystem.UploadedFolder;
 import com.thomaster.ourcloud.model.user.OCUser;
-import com.thomaster.ourcloud.services.request.base.BaseSaveRequest;
+import com.thomaster.ourcloud.services.request.base.BaseRequest;
 import org.springframework.web.multipart.MultipartFile;
 
-public class SaveFileRequest extends BaseSaveRequest {
+public class SaveFileRequest extends BaseRequest {
 
-    private MultipartFile file;
-    private long size;
-    private String fileExtension;
+    private MultipartFile fileToUpload;
+    private String uploadToken;
+    private String md5Hash;
     private String mimeType;
+    private PreFlightSaveFileRequest preFlightSaveFileRequest;
 
-    private SaveFileRequest(OCUser initiatingUser,
-                            OCUser parentFolderOwner,
-                            UploadedFolder parentFolder,
-                            MultipartFile file,
-                            long size,
-                            String fileExtension,
-                            boolean shouldOverrideExistingFile,
-                            String originalName,
-                            String mimeType) {
-        super(initiatingUser, parentFolderOwner, parentFolder, shouldOverrideExistingFile, originalName);
-        this.file = file;
-        this.size = size;
-        this.fileExtension = fileExtension;
+    private SaveFileRequest(OCUser initiatingUser, MultipartFile fileToUpload, String uploadToken, String md5Hash, String mimeType, PreFlightSaveFileRequest preFlightSaveFileRequest) {
+        super(initiatingUser);
+        this.fileToUpload = fileToUpload;
+        this.uploadToken = uploadToken;
+        this.md5Hash = md5Hash;
         this.mimeType = mimeType;
+        this.preFlightSaveFileRequest = preFlightSaveFileRequest;
     }
 
-    public MultipartFile getFile() {
-        return file;
+    public MultipartFile getFileToUpload() {
+        return fileToUpload;
     }
 
-    public long getSize() {
-        return size;
+    public String getUploadToken() {
+        return uploadToken;
     }
 
-    public String getFileExtension() {
-        return fileExtension;
+    public String getMd5Hash() {
+        return md5Hash;
+    }
+
+    public PreFlightSaveFileRequest getPreFlightSaveFileRequest() {
+        return preFlightSaveFileRequest;
     }
 
     public String getMimeType() {
         return mimeType;
     }
 
-    public static class SaveFileRequestBuilder extends BaseSaveRequestBuilder<SaveFileRequest> {
+    public static class SaveFileRequestBuilder extends BaseRequest.BaseRequestBuilder<SaveFileRequest> {
 
-        private MultipartFile file;
-        private long size;
-        private String fileExtension;
+        private MultipartFile fileToUpload;
+        private String uploadToken;
+        private String md5Hash;
+        private PreFlightSaveFileRequest preFlightSaveFileRequest;
         private String mimeType;
 
-        public SaveFileRequestBuilder() {
+        public SaveFileRequest.SaveFileRequestBuilder preFlightSaveFileRequest(PreFlightSaveFileRequest preFlightSaveFileRequest){
+            this.preFlightSaveFileRequest = preFlightSaveFileRequest;
+            return SaveFileRequest.SaveFileRequestBuilder.this;
         }
 
-        public SaveFileRequestBuilder file(MultipartFile file){
-            this.file = file;
-            return SaveFileRequestBuilder.this;
+        public SaveFileRequest.SaveFileRequestBuilder md5Hash(String md5Hash){
+            this.md5Hash = md5Hash;
+            return SaveFileRequest.SaveFileRequestBuilder.this;
         }
 
-        public SaveFileRequestBuilder size(long size){
-            this.size = size;
-            return SaveFileRequestBuilder.this;
-        }
-
-        public SaveFileRequestBuilder fileExtension(String fileExtension){
-            this.fileExtension = fileExtension;
-            return SaveFileRequestBuilder.this;
-        }
-
-        public SaveFileRequestBuilder mimeType(String mimeType){
+        public SaveFileRequest.SaveFileRequestBuilder mimeType(String mimeType){
             this.mimeType = mimeType;
-            return SaveFileRequestBuilder.this;
+            return SaveFileRequest.SaveFileRequestBuilder.this;
+        }
+
+        public SaveFileRequest.SaveFileRequestBuilder uploadToken(String uploadToken){
+            this.uploadToken = uploadToken;
+            return SaveFileRequest.SaveFileRequestBuilder.this;
+        }
+
+        public SaveFileRequest.SaveFileRequestBuilder fileToUpload(MultipartFile fileToUpload){
+            this.fileToUpload = fileToUpload;
+            return SaveFileRequest.SaveFileRequestBuilder.this;
         }
 
         @Override
         public SaveFileRequest build() {
 
             return new SaveFileRequest(initiatingUser,
-                    parentFolderOwner,
-                    parentFolder,
-                    file,
-                    size,
-                    fileExtension,
-                    shouldOverrideExistingFile,
-                    originalName,
-                    mimeType);
+                    fileToUpload,
+                    uploadToken,
+                    md5Hash,
+                    mimeType,
+                    preFlightSaveFileRequest);
         }
     }
 }

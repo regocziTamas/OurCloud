@@ -7,16 +7,28 @@ import com.thomaster.ourcloud.model.user.OCUser;
 import com.thomaster.ourcloud.services.request.RequestValidationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.util.DigestUtils;
+
+import javax.xml.bind.DatatypeConverter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.*;
 
-class SaveFileRequestValidatorTest {
+class PreFlightSaveFileRequestValidatorTest {
 
     private OCUser ocUser;
     private OCUser ocUserTwo;
     private UploadedFolder folder;
 
-    public SaveFileRequestValidatorTest() {
+    public PreFlightSaveFileRequestValidatorTest() {
         ocUser = new OCUser();
         ocUser.setId(1L);
         ocUser.setUsername("Thomaster");
@@ -40,8 +52,8 @@ class SaveFileRequestValidatorTest {
 
         MockMultipartFile file = new MockMultipartFile("TESTFILE", "file.txt","txt", new byte[10]);
 
-        SaveFileRequest request = new SaveFileRequest.SaveFileRequestBuilder()
-                .file(file)
+        PreFlightSaveFileRequest request = new PreFlightSaveFileRequest.PreFlightSaveFileRequestBuilder()
+                //.file(file)
                 .size(file.getSize())
                 .fileExtension(Files.getFileExtension(file.getOriginalFilename()))
                 .originalName(file.getOriginalFilename())
@@ -51,7 +63,7 @@ class SaveFileRequestValidatorTest {
                 .initiatingUser(ocUser)
                 .build();
 
-        SaveFileRequestValidator validator = new SaveFileRequestValidator();
+        PreFlightSaveFileRequestValidator validator = new PreFlightSaveFileRequestValidator();
 
         assertThatCode(() -> validator.validateRequest(request)).doesNotThrowAnyException();
     }
@@ -61,8 +73,8 @@ class SaveFileRequestValidatorTest {
 
         MockMultipartFile file = new MockMultipartFile("TESTFILE", "file.txt","txt", new byte[10]);
 
-        SaveFileRequest request = new SaveFileRequest.SaveFileRequestBuilder()
-                .file(file)
+        PreFlightSaveFileRequest request = new PreFlightSaveFileRequest.PreFlightSaveFileRequestBuilder()
+                //.file(file)
                 .size(file.getSize())
                 .fileExtension(Files.getFileExtension(file.getOriginalFilename()))
                 .originalName(file.getOriginalFilename())
@@ -72,7 +84,7 @@ class SaveFileRequestValidatorTest {
                 .initiatingUser(ocUserTwo)
                 .build();
 
-        SaveFileRequestValidator validator = new SaveFileRequestValidator();
+        PreFlightSaveFileRequestValidator validator = new PreFlightSaveFileRequestValidator();
 
         RequestValidationException requestValidationException = catchThrowableOfType(() -> validator.validateRequest(request), RequestValidationException.class);
         assertThat(requestValidationException.getErrorCode()).isEqualTo(RequestValidationException.NO_WRITE_PERM_CODE);
@@ -83,8 +95,8 @@ class SaveFileRequestValidatorTest {
 
         MockMultipartFile file = new MockMultipartFile("TESTFILE", "file.txt","txt", new byte[10]);
 
-        SaveFileRequest request = new SaveFileRequest.SaveFileRequestBuilder()
-                .file(file)
+        PreFlightSaveFileRequest request = new PreFlightSaveFileRequest.PreFlightSaveFileRequestBuilder()
+                //.file(file)
                 .size(file.getSize())
                 .fileExtension(Files.getFileExtension(file.getOriginalFilename()))
                 .originalName(file.getOriginalFilename())
@@ -94,7 +106,7 @@ class SaveFileRequestValidatorTest {
                 .initiatingUser(null)
                 .build();
 
-        SaveFileRequestValidator validator = new SaveFileRequestValidator();
+        PreFlightSaveFileRequestValidator validator = new PreFlightSaveFileRequestValidator();
 
         RequestValidationException requestValidationException = catchThrowableOfType(() -> validator.validateRequest(request), RequestValidationException.class);
         assertThat(requestValidationException.getErrorCode()).isEqualTo(RequestValidationException.NOT_LOGGED_IN_CODE);
@@ -105,8 +117,8 @@ class SaveFileRequestValidatorTest {
 
         MockMultipartFile file = new MockMultipartFile("TESTFILE", "file.txt","txt", new byte[10]);
 
-        SaveFileRequest request = new SaveFileRequest.SaveFileRequestBuilder()
-                .file(file)
+        PreFlightSaveFileRequest request = new PreFlightSaveFileRequest.PreFlightSaveFileRequestBuilder()
+                //.file(file)
                 .size(1000000000000L)
                 .fileExtension(Files.getFileExtension(file.getOriginalFilename()))
                 .originalName(file.getOriginalFilename())
@@ -116,7 +128,7 @@ class SaveFileRequestValidatorTest {
                 .initiatingUser(ocUser)
                 .build();
 
-        SaveFileRequestValidator validator = new SaveFileRequestValidator();
+        PreFlightSaveFileRequestValidator validator = new PreFlightSaveFileRequestValidator();
 
         RequestValidationException requestValidationException = catchThrowableOfType(() -> validator.validateRequest(request), RequestValidationException.class);
         assertThat(requestValidationException.getErrorCode()).isEqualTo(RequestValidationException.NO_MORE_STORAGE_CODE);
@@ -127,8 +139,8 @@ class SaveFileRequestValidatorTest {
 
         MockMultipartFile file = new MockMultipartFile("TESTFILE", "file.sh","sh", new byte[10]);
 
-        SaveFileRequest request = new SaveFileRequest.SaveFileRequestBuilder()
-                .file(file)
+        PreFlightSaveFileRequest request = new PreFlightSaveFileRequest.PreFlightSaveFileRequestBuilder()
+                //.file(file)
                 .size(100L)
                 .fileExtension(Files.getFileExtension(file.getOriginalFilename()))
                 .originalName(file.getOriginalFilename())
@@ -138,7 +150,7 @@ class SaveFileRequestValidatorTest {
                 .initiatingUser(ocUser)
                 .build();
 
-        SaveFileRequestValidator validator = new SaveFileRequestValidator();
+        PreFlightSaveFileRequestValidator validator = new PreFlightSaveFileRequestValidator();
 
         RequestValidationException requestValidationException = catchThrowableOfType(() -> validator.validateRequest(request), RequestValidationException.class);
         assertThat(requestValidationException.getErrorCode()).isEqualTo(RequestValidationException.FORBIDDEN_EXT_CODE);
@@ -168,8 +180,8 @@ class SaveFileRequestValidatorTest {
 
         MockMultipartFile file = new MockMultipartFile("TESTFILE", "file.txt","txt", new byte[10]);
 
-        SaveFileRequest request = new SaveFileRequest.SaveFileRequestBuilder()
-                .file(file)
+        PreFlightSaveFileRequest request = new PreFlightSaveFileRequest.PreFlightSaveFileRequestBuilder()
+                //.file(file)
                 .size(100L)
                 .fileExtension(Files.getFileExtension(file.getOriginalFilename()))
                 .originalName(file.getOriginalFilename())
@@ -179,7 +191,7 @@ class SaveFileRequestValidatorTest {
                 .initiatingUser(ocUser)
                 .build();
 
-        SaveFileRequestValidator validator = new SaveFileRequestValidator();
+        PreFlightSaveFileRequestValidator validator = new PreFlightSaveFileRequestValidator();
 
         RequestValidationException requestValidationException = catchThrowableOfType(() -> validator.validateRequest(request), RequestValidationException.class);
         assertThat(requestValidationException.getErrorCode()).isEqualTo(RequestValidationException.FILENAME_NOT_UNIQUE_CODE);
@@ -209,8 +221,8 @@ class SaveFileRequestValidatorTest {
 
         MockMultipartFile file = new MockMultipartFile("TESTFILE", "file.txt","txt", new byte[10]);
 
-        SaveFileRequest request = new SaveFileRequest.SaveFileRequestBuilder()
-                .file(file)
+        PreFlightSaveFileRequest request = new PreFlightSaveFileRequest.PreFlightSaveFileRequestBuilder()
+                //.file(file)
                 .size(100L)
                 .fileExtension(Files.getFileExtension(file.getOriginalFilename()))
                 .originalName(file.getOriginalFilename())
@@ -220,9 +232,44 @@ class SaveFileRequestValidatorTest {
                 .initiatingUser(ocUser)
                 .build();
 
-        SaveFileRequestValidator validator = new SaveFileRequestValidator();
+        PreFlightSaveFileRequestValidator validator = new PreFlightSaveFileRequestValidator();
 
         assertThatCode(() -> validator.validateRequest(request)).doesNotThrowAnyException();
+    }
+
+    @Test
+    public void test() throws IOException, NoSuchAlgorithmException {
+
+        /**
+         * for frontend https://www.npmjs.com/package/ts-md5
+         * https://stackoverflow.com/questions/4543018/generate-md5-hash-for-a-list-of-integers
+         */
+
+        String filename = "shrek.jpg";
+
+        FileInputStream fileInputStream = new FileInputStream(filename);
+
+        byte[] bytes = fileInputStream.readAllBytes();
+
+//        byte[] signed = fileInputStream.readAllBytes();
+//        int[] unsigned = new int[signed.length];
+//        for (int i = 0; i < signed.length; i++) {
+//            unsigned[i] = signed[i] & 0xFF;
+//        }
+//        ByteBuffer buf = ByteBuffer.allocate(4*unsigned.length);
+//        buf.order(ByteOrder.LITTLE_ENDIAN);
+//        for (int i = 0; i < unsigned.length; ++i)
+//            buf.putInt(unsigned[i]);
+//        byte[] barr = buf.array();
+
+        MessageDigest md = MessageDigest.getInstance("MD5");
+        md.update(filename.getBytes());
+        md.update(bytes);
+        byte[] digest = md.digest();
+        String myHash = DatatypeConverter
+                .printHexBinary(digest).toLowerCase();
+
+        System.out.println(myHash);
     }
 
 }

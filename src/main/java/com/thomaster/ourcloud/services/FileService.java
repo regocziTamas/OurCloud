@@ -10,12 +10,11 @@ import com.thomaster.ourcloud.services.request.marker.PostQueryRequestValidation
 import com.thomaster.ourcloud.services.request.marker.PreQueryRequestValidationType;
 import com.thomaster.ourcloud.services.request.marker.PreQueryRequestValidation;
 import com.thomaster.ourcloud.services.request.delete.DeleteRequest;
+import com.thomaster.ourcloud.services.request.save.file.PreFlightSaveFileRequest;
 import com.thomaster.ourcloud.services.request.save.file.SaveFileRequest;
 import com.thomaster.ourcloud.services.request.save.folder.SaveFolderRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.UUID;
@@ -30,13 +29,16 @@ public class FileService {
     FileRepository fileRepository;
     OCUserService userService;
     FileSystemService fileSystemService;
+    PreFlightSaveFileRequestTokenService tokenService;
 
     public FileService(FileRepository fileRepository,
                        OCUserService userService,
-                       FileSystemService fileSystemService) {
+                       FileSystemService fileSystemService,
+                       PreFlightSaveFileRequestTokenService tokenService) {
         this.fileRepository = fileRepository;
         this.userService = userService;
         this.fileSystemService = fileSystemService;
+        this.tokenService = tokenService;
     }
 
     @PostQueryRequestValidation(PostQueryRequestValidationType.READ)
@@ -73,24 +75,34 @@ public class FileService {
         fileRepository.save(newFolder);
     }
 
+
     @PreQueryRequestValidation(PreQueryRequestValidationType.UPLOAD_FILE)
     public void saveFile(SaveFileRequest request) {
+
+        PreFlightSaveFileRequest preFlightSaveFileRequest = request.getPreFlightSaveFileRequest();
+
         UploadedFile newFile = new UploadedFile();
         newFile.setOwner(request.getInitiatingUser().get());
-        newFile.setParentFolderPath(request.getParentFolder().getRelativePath());
-        newFile.setOriginalName(request.getOriginalName());
-        newFile.setFileSize(request.getSize());
-        newFile.setRelativePath(request.getParentFolder().getRelativePath() + "." + makeNamePathFriendly(request.getOriginalName()));
+        newFile.setParentFolderPath(preFlightSaveFileRequest.getParentFolder().getRelativePath());
+        newFile.setOriginalName(preFlightSaveFileRequest.getOriginalName());
+        newFile.setFileSize(preFlightSaveFileRequest.getSize());
+        newFile.setRelativePath(preFlightSaveFileRequest.getParentFolder().getRelativePath() + "." + makeNamePathFriendly(preFlightSaveFileRequest.getOriginalName()));
+        newFile.setMimeType(request.getMimeType());
 
         String filenameOnDisk = UUID.randomUUID().toString();
         newFile.setFilenameOnDisk(filenameOnDisk);
 
-        newFile.setMimeType(request.getMimeType());
-
-        fileSystemService.writeFile(request.getFile(), filenameOnDisk);
+        fileSystemService.writeFile(request.getFileToUpload(), filenameOnDisk);
 
         fileRepository.save(newFile);
-        fileRepository.updateFileSizeAllAncestorFolders(request.getParentFolder().getRelativePath(), request.getSize());
+        fileRepository.updateFileSizeAllAncestorFolders(preFlightSaveFileRequest.getParentFolder().getRelativePath(), preFlightSaveFileRequest.getSize());
+
+        tokenService.removeToken(request.getUploadToken());
+    }
+
+    @PreQueryRequestValidation(PreQueryRequestValidationType.PREFLIGHT_UPLOAD_FLIGHT)
+    public String registerPreFlightSaveFileRequest(PreFlightSaveFileRequest request) {
+        return tokenService.getTokenForPreFlightRequest(request);
     }
 
     private String makeNamePathFriendly(String originalName){

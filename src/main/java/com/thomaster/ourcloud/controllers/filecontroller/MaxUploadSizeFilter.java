@@ -1,4 +1,4 @@
-package com.thomaster.ourcloud.controllers;
+package com.thomaster.ourcloud.controllers.filecontroller;
 
 import org.apache.tomcat.util.http.fileupload.impl.SizeLimitExceededException;
 import org.springframework.beans.factory.annotation.Value;

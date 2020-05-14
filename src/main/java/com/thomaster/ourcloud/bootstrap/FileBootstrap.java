@@ -56,8 +56,8 @@ public class FileBootstrap implements ApplicationListener<ContextRefreshedEvent>
 
         user1.setPassword("$2a$10$.8nhpmny.b3DSfYabD1dle1EK4OeV1n.EdTrvpAXqqiArqpQm8LoG");
         user1.setRole(Role.ADMIN);
-        user1.setUsedBytes(10000000000L);
-        //user1.setUsedBytes(0L);
+        //user1.setUsedBytes(10000000000L);
+        user1.setUsedBytes(0L);
 
         OCUser user2 = new OCUser();
 
