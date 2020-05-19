@@ -1,10 +1,6 @@
 package com.thomaster.ourcloud.bootstrap;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Maps;
-import com.thomaster.ourcloud.json.FileSystemElementJSON;
-import com.thomaster.ourcloud.model.filesystem.FileSystemElement;
 import com.thomaster.ourcloud.model.filesystem.UploadedFile;
 import com.thomaster.ourcloud.model.filesystem.UploadedFolder;
 import com.thomaster.ourcloud.model.user.OCUser;
@@ -13,23 +9,21 @@ import com.thomaster.ourcloud.repositories.UserRepository;
 import com.thomaster.ourcloud.repositories.file.FileRepository;
 import com.thomaster.ourcloud.services.FileService;
 import com.thomaster.ourcloud.services.OCUserService;
-import com.thomaster.ourcloud.services.request.save.folder.SaveFolderRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ResourceUtils;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -41,6 +35,9 @@ public class FileBootstrap implements ApplicationListener<ContextRefreshedEvent>
     private UserRepository userRepository;
     private FileRepository fileRepository;
     private FileService fileService;
+    @Autowired
+    ResourceLoader resourceLoader;
+
 
     Logger logger = LoggerFactory.getLogger(FileBootstrap.class);
 
@@ -244,20 +241,17 @@ public class FileBootstrap implements ApplicationListener<ContextRefreshedEvent>
 
     private Map<String, Long> copyDefaultFiles() {
         String storagePath = System.getenv("STORAGE_PATH");
-        String testFileLocation = "src/main/resources/test_files";
         List<String> testFileNames = Arrays.asList("chemistry", "history", "italy");
 
         testFileNames
                 .forEach(filename -> {
                     String target = storagePath + "/" + filename;
                     try {
-                        //File file = ResourceUtils.getFile("classpath:" + filename);
-                        InputStream fileInputStream = new ClassPathResource("classpath:" + filename).getInputStream();
-
-                        //logger.info("Copying " + filename + " from: " + fileInputStream.getAbsolutePath() + " to: " + target);
-
+                        Resource resource = resourceLoader.getResource("classpath:test_files/" + filename);
+                        logger.info("Copying " + filename + " from " + resource.getURI().toString() + " to " + target);
+                        InputStream inputStream = resource.getInputStream();
                         FileOutputStream fileOutputStream = new FileOutputStream(target);
-                        fileOutputStream.write(fileInputStream.readAllBytes());
+                        fileOutputStream.write(inputStream.readAllBytes());
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
