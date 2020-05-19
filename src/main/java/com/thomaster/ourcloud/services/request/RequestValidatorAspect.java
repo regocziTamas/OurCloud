@@ -6,10 +6,7 @@ import com.thomaster.ourcloud.services.request.base.BaseRequest;
 import com.thomaster.ourcloud.services.request.delete.DeleteRequest;
 import com.thomaster.ourcloud.services.request.delete.DeleteRequestValidator;
 import com.thomaster.ourcloud.services.request.download.DownloadRequestValidator;
-import com.thomaster.ourcloud.services.request.marker.PostQueryRequestValidation;
-import com.thomaster.ourcloud.services.request.marker.PostQueryRequestValidationType;
-import com.thomaster.ourcloud.services.request.marker.PreQueryRequestValidation;
-import com.thomaster.ourcloud.services.request.marker.PreQueryRequestValidationType;
+import com.thomaster.ourcloud.services.request.marker.*;
 import com.thomaster.ourcloud.services.request.read.ReadRequest;
 import com.thomaster.ourcloud.services.request.read.ReadRequestFactory;
 import com.thomaster.ourcloud.services.request.read.ReadRequestValidator;
@@ -25,10 +22,13 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Component;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Aspect
 @Component
@@ -94,7 +94,7 @@ public class RequestValidatorAspect {
 
     @Before("@annotation(com.thomaster.ourcloud.services.request.marker.PreQueryRequestValidation) && args(request,..)")
     public void preQueryRequestValidationHandler(JoinPoint joinPoint, BaseRequest request) {
-        PreQueryRequestValidationType value = extractAnnotation(PreQueryRequestValidation.class, joinPoint).value();
+        PreQueryRequestValidationType value = extractAnnotationFromJoinPoint(PreQueryRequestValidation.class, joinPoint).value();
 
         switch (value) {
             case PREFLIGHT_UPLOAD_FLIGHT:
@@ -114,14 +114,19 @@ public class RequestValidatorAspect {
         }
     }
 
+
     @Around(value = "@annotation(com.thomaster.ourcloud.services.request.marker.PostQueryRequestValidation)")
     public FileSystemElement postQueryRequestValidationHandler(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
-
         String filePath = (String) proceedingJoinPoint.getArgs()[0];
 
         FileSystemElement fileSystemElement = (FileSystemElement) proceedingJoinPoint.proceed();
 
-        PostQueryRequestValidationType value = extractAnnotation(PostQueryRequestValidation.class, proceedingJoinPoint).value();
+        //AnnotationUtils.
+
+        PostQueryRequestValidationType value = extractAnnotationFromJoinPoint(PostQueryRequestValidation.class, proceedingJoinPoint).value();
+
+//        if(isExemptFromRequestValidation())
+//            return fileSystemElement;
 
         switch (value) {
             case READ:
@@ -136,11 +141,24 @@ public class RequestValidatorAspect {
         return fileSystemElement;
     }
 
-    private static <T extends Annotation> T extractAnnotation(Class<T> annotationClass, JoinPoint joinPoint)
+    private boolean isExemptFromRequestValidation() {
+        return StackWalker.getInstance().walk(stackFrameStream -> stackFrameStream
+                .anyMatch(stackFrame -> hasAnnotation(ExemptFromRequestValidation.class, stackFrame.getDeclaringClass())));
+    }
+
+    private static <T extends Annotation> T extractAnnotationFromJoinPoint(Class<T> annotationClass, JoinPoint joinPoint)
     {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
         return method.getAnnotation(annotationClass);
+    }
+
+    private static <T extends Annotation> T extractAnnotationFromClass(Class<T> annotationClass, Class<?> targetClass) {
+       return targetClass.getAnnotation(annotationClass);
+    }
+
+    private static <T extends Annotation> boolean hasAnnotation(Class<T> annotationClass, Class<?> targetClass) {
+        return extractAnnotationFromClass(annotationClass, targetClass) != null;
     }
 
 }

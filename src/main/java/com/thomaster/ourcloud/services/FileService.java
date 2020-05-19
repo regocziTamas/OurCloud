@@ -70,7 +70,7 @@ public class FileService {
         newFolder.setOwner(request.getInitiatingUser().get());
         newFolder.setParentFolderPath(request.getParentFolder().getRelativePath());
         newFolder.setOriginalName(request.getOriginalName());
-        newFolder.setRelativePath(request.getParentFolder().getRelativePath() + "." + request.getOriginalName());
+        newFolder.setRelativePath(request.getParentFolder().getRelativePath() + "." + makeNamePathFriendly(request.getOriginalName()));
 
         fileRepository.save(newFolder);
     }

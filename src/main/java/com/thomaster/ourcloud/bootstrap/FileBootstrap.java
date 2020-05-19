@@ -2,6 +2,7 @@ package com.thomaster.ourcloud.bootstrap;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Maps;
 import com.thomaster.ourcloud.json.FileSystemElementJSON;
 import com.thomaster.ourcloud.model.filesystem.FileSystemElement;
 import com.thomaster.ourcloud.model.filesystem.UploadedFile;
@@ -13,6 +14,8 @@ import com.thomaster.ourcloud.repositories.file.FileRepository;
 import com.thomaster.ourcloud.services.FileService;
 import com.thomaster.ourcloud.services.OCUserService;
 import com.thomaster.ourcloud.services.request.save.folder.SaveFolderRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -21,10 +24,12 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -34,6 +39,8 @@ public class FileBootstrap implements ApplicationListener<ContextRefreshedEvent>
     private UserRepository userRepository;
     private FileRepository fileRepository;
     private FileService fileService;
+
+    Logger logger = LoggerFactory.getLogger(FileBootstrap.class);
 
     public FileBootstrap(OCUserService userService,
                          FileRepository fileRepository,
@@ -49,6 +56,8 @@ public class FileBootstrap implements ApplicationListener<ContextRefreshedEvent>
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
+
+        Map<String, Long> lengthMap = copyDefaultFiles();
 
         OCUser user1 = new OCUser();
 
@@ -100,7 +109,8 @@ public class FileBootstrap implements ApplicationListener<ContextRefreshedEvent>
         UploadedFile fileD = new UploadedFile();
         fileD.setOriginalName("history.txt");
         fileD.setParentFolderPath("Guest01.homework_files");
-        fileD.setFileSize(2299L);
+        fileD.setFileSize(lengthMap.get("history"));
+        logger.info("Setting size of file 'history' to: " + lengthMap.get("history") + " bytes" );
         fileD.setRelativePath("Guest01.homework_files.history");
         fileD.setFilenameOnDisk("history");
         fileD.setOwner(user1);
@@ -110,7 +120,8 @@ public class FileBootstrap implements ApplicationListener<ContextRefreshedEvent>
         UploadedFile fileE = new UploadedFile();
         fileE.setOriginalName("chemistry.txt");
         fileE.setParentFolderPath("Guest01.homework_files");
-        fileE.setFileSize(1264L);
+        fileE.setFileSize(lengthMap.get("chemistry"));
+        logger.info("Setting size of file 'chemistry' to: " + lengthMap.get("chemistry") + " bytes" );
         fileE.setRelativePath("Guest01.homework_files.chemistry");
         fileE.setFilenameOnDisk("chemistry");
         fileE.setOwner(user1);
@@ -128,7 +139,8 @@ public class FileBootstrap implements ApplicationListener<ContextRefreshedEvent>
         UploadedFile fileG = new UploadedFile();
         fileG.setOriginalName("italy.jpg");
         fileG.setParentFolderPath("Guest01.holiday_pictures");
-        fileG.setFileSize(5129431L);
+        fileG.setFileSize(lengthMap.get("italy"));
+        logger.info("Setting size of file 'italy' to: " + lengthMap.get("italy") + " bytes" );
         fileG.setRelativePath("Guest01.holiday_pictures.italy");
         fileG.setFilenameOnDisk("italy");
         fileG.setOwner(user1);
@@ -172,6 +184,8 @@ public class FileBootstrap implements ApplicationListener<ContextRefreshedEvent>
 
         UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken("Guest01", null, Collections.singletonList(new SimpleGrantedAuthority("ADMIN")));
         SecurityContextHolder.getContext().setAuthentication(auth);
+
+//        fileService.findFSElementWithContainedFilesByPath("asd");
 
 //        ArrayList<FileSystemElement> all = new ArrayList<>();
 //        all.add(folderA);
@@ -224,5 +238,36 @@ public class FileBootstrap implements ApplicationListener<ContextRefreshedEvent>
 
         //System.out.println(FileStructureFormatter.formatRecursive(afterDelete));
 
+    }
+
+    private Map<String, Long> copyDefaultFiles() {
+        String storagePath = System.getenv("STORAGE_PATH");
+        String testFileLocation = "src/main/resources/test_files";
+        List<String> testFileNames = Arrays.asList("chemistry", "history", "italy");
+
+        testFileNames
+                .forEach(filename -> {
+                    Path originalPath = Path.of(testFileLocation + "/" + filename);
+                    Path target = Path.of(storagePath + "/" + filename);
+                    try {
+                        logger.info("Copying " + filename + " from: " + originalPath.toString() + " to: " + target.toString());
+                        Files.copy(originalPath, target, StandardCopyOption.REPLACE_EXISTING);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
+
+        Map<String, Long> lengthMap = testFileNames
+                .stream()
+                .map(filename -> {
+                    File file = new File(storagePath + "/" + filename);
+                    long length = file.length();
+                    return Maps.immutableEntry(filename, length);
+                })
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        logger.info("Test files with size: " + lengthMap);
+
+        return lengthMap;
     }
 }
