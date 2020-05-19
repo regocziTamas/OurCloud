@@ -12,13 +12,25 @@ import javax.sql.DataSource;
 public class DataSourceConfig {
 
     @Bean
-    @Primary
+    @Profile("prod")
     public DataSource dataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName("org.postgresql.Driver");
         dataSource.setUrl(System.getenv("JDBC_DATABASE_URL"));
         dataSource.setUsername(System.getenv("JDBC_DATABASE_USERNAME"));
         dataSource.setPassword(System.getenv("JDBC_DATABASE_PASSWORD"));
+
+        return dataSource;
+    }
+
+    @Bean
+    @Profile("test")
+    public DataSource dataSource_test() {
+        DriverManagerDataSource dataSource = new DriverManagerDataSource();
+        dataSource.setDriverClassName("org.h2.Driver");
+        dataSource.setUrl("jdbc:h2:mem:db;DB_CLOSE_DELAY=-1");
+        dataSource.setUsername("sa");
+        dataSource.setPassword("sa");
 
         return dataSource;
     }

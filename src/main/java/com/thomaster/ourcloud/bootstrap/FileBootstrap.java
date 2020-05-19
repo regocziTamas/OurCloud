@@ -19,13 +19,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ResourceUtils;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -33,6 +34,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
+@Profile("prod")
 public class FileBootstrap implements ApplicationListener<ContextRefreshedEvent> {
 
     private OCUserService userService;
@@ -247,11 +249,15 @@ public class FileBootstrap implements ApplicationListener<ContextRefreshedEvent>
 
         testFileNames
                 .forEach(filename -> {
-                    Path originalPath = Path.of(testFileLocation + "/" + filename);
-                    Path target = Path.of(storagePath + "/" + filename);
+                    String target = storagePath + "/" + filename;
                     try {
-                        logger.info("Copying " + filename + " from: " + originalPath.toString() + " to: " + target.toString());
-                        Files.copy(originalPath, target, StandardCopyOption.REPLACE_EXISTING);
+                        //File file = ResourceUtils.getFile("classpath:" + filename);
+                        InputStream fileInputStream = new ClassPathResource("classpath:" + filename).getInputStream();
+
+                        //logger.info("Copying " + filename + " from: " + fileInputStream.getAbsolutePath() + " to: " + target);
+
+                        FileOutputStream fileOutputStream = new FileOutputStream(target);
+                        fileOutputStream.write(fileInputStream.readAllBytes());
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
